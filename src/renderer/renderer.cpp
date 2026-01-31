@@ -71,6 +71,11 @@ void Renderer::renderGameObject(GameObject& gameObject) {
         auto value = reinterpret_cast<std::uintptr_t>(program->getHandle());
         unsigned int shader = static_cast<unsigned int>(value);
         backend->setUniforms(shader);
+        
+        auto& lights = backend->getLights();
+        if (!lights.empty()) {
+            program->setUniformBuffer("LightData", 2, lights[0].direction, sizeof(float) * 3);
+        }
     } else {
         LOG_ERROR("Invalid shader program");
         return;

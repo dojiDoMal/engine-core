@@ -39,6 +39,9 @@ void init() {
     mainCameraOwner = SceneLoader::loadCamera(sceneFilePath, *rendererBackend);
     rendererBackend->setCamera(mainCameraOwner.get());
 
+    auto lights = SceneLoader::loadLights(sceneFilePath);
+    rendererBackend->setLights(lights);
+
     auto objects = SceneLoader::loadMeshes(sceneFilePath, graphicsAPI, rendererBackend);
     for (auto& obj : objects) {
         gameObjects.add(obj.release());

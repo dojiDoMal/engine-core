@@ -141,3 +141,20 @@ std::vector<std::unique_ptr<GameObject>> SceneLoader::loadMeshes(const std::stri
 
     return objects;
 }
+
+std::vector<Light> SceneLoader::loadLights(const std::string& filepath) {
+    std::ifstream file(filepath, std::ios::binary);
+    CompiledScene scene;
+    file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
+
+    std::vector<Light> lights;
+    for (uint32_t i = 0; i < scene.lightCount; i++) {
+        Light light;
+        light.type = static_cast<LightType>(scene.lights[i].type);
+        light.direction[0] = scene.lights[i].direction[0];
+        light.direction[1] = scene.lights[i].direction[1];
+        light.direction[2] = scene.lights[i].direction[2];
+        lights.push_back(light);
+    }
+    return lights;
+}

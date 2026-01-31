@@ -4,10 +4,14 @@
 #include "graphics_api.hpp"
 #include "mesh.hpp"
 #include "camera.hpp"
+#include "light.hpp"
+#include <vector>
 
 class RendererBackend{
 protected:
     Camera* mainCamera = nullptr;
+    std::vector<Light> lights;
+
 public:
     virtual ~RendererBackend() = default;
 
@@ -27,6 +31,9 @@ public:
         this->mainCamera = camera;
         onCameraSet();
     }
+
+    void setLights(const std::vector<Light>& sceneLights) { lights = sceneLights; }
+    const std::vector<Light>& getLights() const { return lights; }
 };
 
 #endif // RENDERERBACKEND_HPP

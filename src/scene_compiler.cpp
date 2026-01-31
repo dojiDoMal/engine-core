@@ -42,6 +42,23 @@ int main(int argc, char *argv[]) {
     scene.camera.hasSkybox = false;
   }
 
+  scene.lightCount = 0;
+  if (j.contains("lights")) {
+    auto &lights = j["lights"];
+    scene.lightCount = lights.size();
+    for (size_t i = 0; i < lights.size() && i < 32; i++) {
+      std::string type = lights[i]["type"];
+      if (type == "DIRECTIONAL") scene.lights[i].type = 0;
+      else if (type == "POINT") scene.lights[i].type = 1;
+      else if (type == "SPOT") scene.lights[i].type = 2;
+      else scene.lights[i].type = 0; // default
+
+      std::array<float, 3> direction = lights[i]["direction"];
+      for (int j = 0; j < 3; j++)
+        scene.lights[i].direction[j] = direction[j];
+    }
+  }
+
   scene.meshCount = 0;
   if (j.contains("meshes")) {
     auto &meshes = j["meshes"];

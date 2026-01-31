@@ -15,6 +15,12 @@ struct SkyboxData {
   MaterialData material;
 };
 
+struct LightData {
+    uint8_t type;  // 0=DIRECTIONAL, 1=POINT, 2=SPOT
+    float direction[3];
+    //float position[3];
+};
+
 struct MeshData {
   char objPath[256];
   MaterialData material;
@@ -34,6 +40,8 @@ struct CompiledScene {
   SceneCameraData camera;
   uint32_t meshCount;
   MeshData meshes[32];
+  uint32_t lightCount;
+  LightData lights[32];
 };
 
 #endif
