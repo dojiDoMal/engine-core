@@ -27,3 +27,10 @@ void Material::setContext(void* context) {
         shaderProgram = ShaderProgramFactory::create(api, context);
     }
 }
+
+void Material::use() { 
+    if(shaderProgram) {
+        shaderProgram->use();
+        shaderProgram->setUniformBuffer("MaterialData", 1, &baseColor, sizeof(baseColor));
+    } 
+}

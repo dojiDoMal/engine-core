@@ -1,4 +1,6 @@
+#include "color.hpp"
 #include "scene_format.hpp"
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -48,9 +50,12 @@ int main(int argc, char *argv[]) {
       std::string objPath = meshes[i]["objPath"];
       std::string vertPath = meshes[i]["material"]["vertexShaderPath"];
       std::string fragPath = meshes[i]["material"]["fragmentShaderPath"];
+      std::array<float, 4> color = meshes[i]["material"]["color"];
       std::strncpy(scene.meshes[i].objPath, objPath.c_str(), 255);
       std::strncpy(scene.meshes[i].material.vertexShaderPath, vertPath.c_str(), 255);
       std::strncpy(scene.meshes[i].material.fragmentShaderPath, fragPath.c_str(), 255);
+      
+      scene.meshes[i].material.color = {color[0], color[1], color[2], color[3]};
     }
   }
 

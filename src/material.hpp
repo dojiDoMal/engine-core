@@ -1,6 +1,7 @@
 #ifndef MATERIAL_HPP
 #define MATERIAL_HPP
 
+#include "color.hpp"
 #include "graphics_api.hpp"
 #include "shader_asset.hpp"
 #include "shader_program.hpp"
@@ -13,12 +14,14 @@ private:
     std::unique_ptr<ShaderAsset> fragmentShader;
     std::unique_ptr<ShaderProgram> shaderProgram;
     GraphicsAPI api;
+    ColorRGBA baseColor = COLOR::GREEN;
 
 public:
 
     Material(GraphicsAPI api);
 
     bool init();
+    void use();
     void setContext(void* context);
 
     void setVertexShader(std::unique_ptr<ShaderAsset> shader) {
@@ -28,8 +31,9 @@ public:
     void setFragmentShader(std::unique_ptr<ShaderAsset> shader) {
         fragmentShader = std::move(shader);
     }
+
+    void setBaseColor(const ColorRGBA& color) { baseColor = color; }
      
-    void use() { if(shaderProgram) shaderProgram->use(); }
     ShaderProgram* getProgram() const { return shaderProgram.get(); }
 };
 

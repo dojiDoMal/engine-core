@@ -21,6 +21,7 @@ public:
     bool attachShader(const ShaderAsset& shader) override;
     bool link() override;
     void use() override;
+    void setUniformBuffer(const char* name, int binding, const void* data, size_t size) override {return;};
     void* getHandle() const override;
     bool isValid() const override;
     

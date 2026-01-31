@@ -2,10 +2,12 @@
 #define SCENE_FORMAT_HPP
 
 #include <cstdint>
+#include "color.hpp"
 
 struct MaterialData {
   char vertexShaderPath[256];
   char fragmentShaderPath[256];
+  ColorRGBA color;
 };
 
 struct SkyboxData {

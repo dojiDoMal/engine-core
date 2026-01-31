@@ -121,8 +121,11 @@ std::vector<std::unique_ptr<GameObject>> SceneLoader::loadMeshes(const std::stri
         auto material = std::make_unique<Material>(api);
         material->setVertexShader(std::move(vertexShader));
         material->setFragmentShader(std::move(fragmentShader));
+        material->setBaseColor(meshData.material.color);
         if (!material->init()) {
-            LOG_ERROR("Material init failed!");
+            LOG_ERROR("Material init failed for mesh: " + std::string(meshData.objPath));
+            LOG_ERROR("Vertex shader: " + std::string(meshData.material.vertexShaderPath));
+            LOG_ERROR("Fragment shader: " + std::string(meshData.material.fragmentShaderPath));
             continue;
         }
 
