@@ -1,8 +1,10 @@
+#define CLASS_NAME "Renderer"
 #include "renderer.hpp"
 #include "game_object.hpp"
 #include "material.hpp"
 #include <cstdint>
 #include <cstdio>
+#include "log_macros.hpp"
 
 void Renderer::setRendererBackend(RendererBackend *backend) 
 { 
@@ -47,19 +49,19 @@ void Renderer::clearScreen()
 void Renderer::renderGameObject(GameObject& gameObject) {
     auto mesh = gameObject.getMesh();
     if (!mesh) {
-        printf("gameobject does not have a mesh!\n");
+        LOG_INFO((std::string)"Mesh is null!");
         return;
     }
 
     auto meshRenderer = gameObject.getMeshRenderer();
     if (!meshRenderer) {
-        printf("gameobject does not have a meshrenderer!\n");
+        LOG_INFO((std::string)"MeshRenderer is null!");
         return;
     }
 
     auto mat = meshRenderer->getMaterial();
     if (!mat) {
-        printf("gameobject meshrenderer does not have a material!\n");
+        LOG_INFO((std::string)"Material is null!");
         return;
     }
     mat->use();
@@ -70,7 +72,7 @@ void Renderer::renderGameObject(GameObject& gameObject) {
         unsigned int shader = static_cast<unsigned int>(value);
         backend->setUniforms(shader);
     } else {
-        printf("Error: Invalid shader program\n");
+        LOG_ERROR("Invalid shader program");
         return;
     }
     
@@ -82,9 +84,7 @@ void Renderer::render(const std::vector<GameObject*>& objects) {
         renderGameObject(*go);
     }
 
-    //printf("Checking skybox...\n");
     if (backend && backend->getCamera()) {
-        //printf("Backend and camera exist\n");
         auto skybox = backend->getCamera()->getSkybox();
         if (skybox) {
             printf("Skybox exists\n");

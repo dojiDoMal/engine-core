@@ -1,5 +1,5 @@
 #include "vulkan_shader_program.hpp"
-#include "vulkan_renderer_backend.hpp"
+#include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
 #include "shader_asset.hpp"
 
 VulkanShaderProgram::~VulkanShaderProgram() {

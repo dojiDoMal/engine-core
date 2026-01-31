@@ -1,6 +1,8 @@
+#define CLASS_NAME "VulkanMeshBuffer"
 #include "vulkan_mesh_buffer.hpp"
-#include "vulkan_renderer_backend.hpp"
+#include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
 #include <cstring>
+#include "log_macros.hpp"
 
 VulkanMeshBuffer::~VulkanMeshBuffer() {
     destroy();
@@ -8,6 +10,12 @@ VulkanMeshBuffer::~VulkanMeshBuffer() {
 
 bool VulkanMeshBuffer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
                                    VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+    
+    VkDevice dev = backend->getDevice();
+    if (dev == VK_NULL_HANDLE) {
+        LOG_ERROR("Device is NULL!");
+    }
+    
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = size;

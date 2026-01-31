@@ -1,10 +1,10 @@
 #include "shader_compiler_factory.hpp"
 
 #ifdef PLATFORM_WEBGL
-#include "web_gl_shader_compiler.hpp"
+#include "renderer/backends/webgl/web_gl_shader_compiler.hpp"
 #else
-#include "open_gl_shader_compiler.hpp"
-#include "vulkan_shader_compiler.hpp"
+#include "renderer/backends/opengl/open_gl_shader_compiler.hpp"
+#include "renderer/backends/vulkan/vulkan_shader_compiler.hpp"
 #endif
 
 std::unique_ptr<ShaderCompiler> ShaderCompilerFactory::create(GraphicsAPI api, void* context) {

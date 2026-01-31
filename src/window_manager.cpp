@@ -1,13 +1,14 @@
-
+#define CLASS_NAME "WindowManager"
 #ifdef PLATFORM_WEBGL
-#include "web_gl_renderer_backend.hpp"
+#include "renderer/backends/webgl/web_gl_renderer_backend.hpp"
 #else
-#include "open_gl_renderer_backend.hpp"
-#include "vulkan_renderer_backend.hpp"
+#include "renderer/backends/opengl/open_gl_renderer_backend.hpp"
+#include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
 #endif
 
 #include "window_manager.hpp"
 #include <SDL2/SDL_vulkan.h>
+#include "log_macros.hpp"
 
 WindowManager::WindowManager(GraphicsAPI api) {
     init(api);
@@ -97,7 +98,7 @@ bool WindowManager::init(GraphicsAPI api){
     #endif
 
     this->setWindow(window);
-    this->renderer = renderer;
+    //this->renderer = renderer;
     renderer->init();
 
     return true;

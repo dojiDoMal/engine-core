@@ -6,8 +6,9 @@
 #include "logger.hpp"
 
 #ifndef PLATFORM_WEBGL
-#include "vulkan_renderer_backend.hpp"
+#include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
 #endif
+
 #include <cstdio>
 #include <memory>
 

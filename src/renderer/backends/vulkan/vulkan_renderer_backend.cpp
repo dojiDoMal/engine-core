@@ -1,3 +1,6 @@
+#include <sstream>
+#define CLASS_NAME "VulkanRendererBackend"
+
 #include "vulkan_renderer_backend.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
@@ -9,6 +12,7 @@
 #include <set>
 #include <array>
 #include <fstream>
+#include "log_macros.hpp"
 
 GraphicsAPI VulkanRendererBackend::getGraphicsAPI() const {
     return GraphicsAPI::VULKAN;
@@ -158,8 +162,13 @@ bool VulkanRendererBackend::createLogicalDevice() {
     createInfo.ppEnabledExtensionNames = deviceExtensions;
     
     if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+        LOG_ERROR("failed to create logical device!");       
         return false;
     }
+
+    std::ostringstream oss;
+    oss << "[Vulkan] Logical device created successfully, handle: " << device;
+    LOG_INFO(oss.str());
     
     vkGetDeviceQueue(device, graphicsQueueFamily, 0, &graphicsQueue);
     vkGetDeviceQueue(device, presentQueueFamily, 0, &presentQueue);
@@ -569,6 +578,11 @@ bool VulkanRendererBackend::createDepthResources() {
 }
 
 bool VulkanRendererBackend::createUniformBuffer() {
+    if (device == VK_NULL_HANDLE) {
+        LOG_WARN("Device is null in createUniformBuffer\n");
+        return false;
+    }
+
     VkDeviceSize bufferSize = 4 * sizeof(glm::mat4);
     
     VkBufferCreateInfo bufferInfo{};

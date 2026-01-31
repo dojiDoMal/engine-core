@@ -1,3 +1,4 @@
+#define CLASS_NAME "OpenGLRendererBackend"
 #include "open_gl_renderer_backend.hpp"
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -6,8 +7,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "color.hpp"
 #include "graphics_api.hpp"
-
 #include "stb_image.h"
+#include "log_macros.hpp"
 
 GraphicsAPI OpenGLRendererBackend::getGraphicsAPI() const {
     return GraphicsAPI::OPENGL;
@@ -30,7 +31,8 @@ bool OpenGLRendererBackend::init()
     GLenum err = glewInit();
     if (GLEW_OK != err)
     {
-        printf("GLEW initialization failed: %s\n", glewGetErrorString(err));
+        std::string glewErr = reinterpret_cast<const char*>(glewGetErrorString(err));
+        LOG_ERROR("GLEW initialization failed: " + glewErr);
         return false;
     }
 
@@ -71,7 +73,7 @@ void OpenGLRendererBackend::draw(const Mesh& mesh)
 void OpenGLRendererBackend::setUniforms(unsigned int shaderProgram) {
 
     if (!mainCamera) {
-        printf("Error: mainCamera is null\n");
+        LOG_ERROR("mainCamera is null");
         return;
     }
 
@@ -113,7 +115,7 @@ unsigned int OpenGLRendererBackend::createCubemapTexture(const std::vector<std::
                          0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
         } else {
-            printf("Cubemap texture failed to load at path: %s\n", faces[i].c_str());
+            LOG_WARN("Cubemap texture failed to load at path: " + faces[i].c_str());
             stbi_image_free(data);
             return 0;
         }

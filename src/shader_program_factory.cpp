@@ -1,10 +1,10 @@
 #include "shader_program_factory.hpp"
 
 #ifdef PLATFORM_WEBGL
-#include "web_gl_shader_program.hpp"
+#include "renderer/backends/webgl/web_gl_shader_program.hpp"
 #else
-#include "open_gl_shader_program.hpp"
-#include "vulkan_shader_program.hpp"
+#include "renderer/backends/opengl/open_gl_shader_program.hpp"
+#include "renderer/backends/vulkan/vulkan_shader_program.hpp"
 #endif
 
 std::unique_ptr<ShaderProgram> ShaderProgramFactory::create(GraphicsAPI api, void* context) {

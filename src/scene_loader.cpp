@@ -1,12 +1,13 @@
+#define CLASS_NAME "SceneLoader"
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tinyobjloader/tiny_obj_loader.h"
-
 #include "scene_loader.hpp"
 #include "scene_format.hpp"
 #include "material.hpp"
 #include "mesh_renderer.hpp"
 #include "shader_asset.hpp"
 #include "skybox.hpp"
+#include "log_macros.hpp"
 
 std::string SceneLoader::getShaderPath(const std::string& basePath, GraphicsAPI api) {
     if (api == GraphicsAPI::WEBGL || api == GraphicsAPI::OPENGL) {
@@ -25,7 +26,7 @@ std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, Grap
     std::string warn, err;
 
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filepath.c_str())) {
-        printf("ERROR: Unable to load obj: %s\n", filepath.c_str());
+        LOG_ERROR("Unable to load obj: " + filepath);
         return nullptr;
     }
 
@@ -108,7 +109,7 @@ std::vector<std::unique_ptr<GameObject>> SceneLoader::loadMeshes(const std::stri
 
         auto mesh = loadObjMesh(meshData.objPath, api);
         if (!mesh || !mesh->configure(backend)) {
-            printf("ERROR: Failed to load mesh: %s\n", meshData.objPath);
+            LOG_ERROR("Failed to load mesh: " + meshData.objPath);
             continue;
         }
 
@@ -121,7 +122,7 @@ std::vector<std::unique_ptr<GameObject>> SceneLoader::loadMeshes(const std::stri
         material->setVertexShader(std::move(vertexShader));
         material->setFragmentShader(std::move(fragmentShader));
         if (!material->init()) {
-            printf("ERROR: Material init failed!\n");
+            LOG_ERROR("Material init failed!");
             continue;
         }
 

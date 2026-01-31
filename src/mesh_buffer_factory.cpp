@@ -1,10 +1,10 @@
 #include "mesh_buffer_factory.hpp"
 
 #ifdef PLATFORM_WEBGL
-#include "web_gl_mesh_buffer.hpp"
+#include "renderer/backends/webgl/web_gl_mesh_buffer.hpp"
 #else
-#include "open_gl_mesh_buffer.hpp"
-#include "vulkan_mesh_buffer.hpp"
+#include "renderer/backends/opengl/open_gl_mesh_buffer.hpp"
+#include "renderer/backends/vulkan/vulkan_mesh_buffer.hpp"
 #endif
 
 std::unique_ptr<MeshBuffer> MeshBufferFactory::create(GraphicsAPI api, void* context) {

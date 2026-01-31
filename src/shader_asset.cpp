@@ -1,6 +1,8 @@
+#define CLASS_NAME "ShaderAsset"
 #include "shader_asset.hpp"
 #include "shader_compiler_factory.hpp"
 #include <fstream>
+#include "log_macros.hpp"
 
 ShaderAsset::ShaderAsset(const std::string& path, ShaderType type, GraphicsAPI api, void* context) 
     : Asset(path), shaderType(type) {
@@ -13,7 +15,7 @@ bool ShaderAsset::load() {
         return true;
     }
     
-    printf("ERROR: Shader compilation failed for: %s\n", getPath().c_str());
+    LOG_ERROR("Shader compilation failed for: " + getPath());
     return false;
 }
 

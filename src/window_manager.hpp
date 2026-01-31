@@ -2,7 +2,7 @@
 #define WINDOW_MANAGER_HPP
 
 #include <string>
-#include "renderer.hpp"
+#include "renderer/renderer.hpp"
 #include <SDL2/SDL.h>
 
 class WindowManager{
