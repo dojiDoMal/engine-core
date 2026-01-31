@@ -3,10 +3,12 @@
 
 #include "shader_program.hpp"
 #include <GL/glew.h>
+#include <unordered_map>
 
 class OpenGLShaderProgram : public ShaderProgram {
 private:
     GLuint programID = 0;
+    std::unordered_map<int, GLuint> ubos;
 
 public:
     ~OpenGLShaderProgram() override;

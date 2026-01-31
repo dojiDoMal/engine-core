@@ -5,6 +5,9 @@
 #include "log_macros.hpp"
 
 OpenGLShaderProgram::~OpenGLShaderProgram() {
+    for (auto& pair : ubos) {
+        glDeleteBuffers(1, &pair.second);
+    }
     if (programID != 0) {
         glDeleteProgram(programID);
     }
@@ -43,13 +46,18 @@ void OpenGLShaderProgram::setUniformBuffer(const char* name, int binding, const 
     if (location != GL_INVALID_INDEX) {
         glUniformBlockBinding(programID, location, binding);
         
-        static GLuint ubo = 0;
-        if (ubo == 0) {
+        if (ubos.find(binding) == ubos.end()) {
+            GLuint ubo;
             glGenBuffers(1, &ubo);
+            glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+            glBufferData(GL_UNIFORM_BUFFER, size, data, GL_DYNAMIC_DRAW);
+            glBindBufferBase(GL_UNIFORM_BUFFER, binding, ubo);
+            ubos[binding] = ubo;
+        } else {
+            glBindBuffer(GL_UNIFORM_BUFFER, ubos[binding]);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data);
         }
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferData(GL_UNIFORM_BUFFER, size, data, GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_UNIFORM_BUFFER, binding, ubo);
+    } else {
+        LOG_WARN("Uniform has invalid index!");
     }
-    LOG_WARN("Uniform has invalid index!");
 }

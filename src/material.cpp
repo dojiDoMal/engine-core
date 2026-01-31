@@ -1,4 +1,5 @@
 #include "material.hpp"
+#include "color.hpp"
 #include "shader_program_factory.hpp"
 
 Material::Material(GraphicsAPI api) : api(api) {
@@ -19,7 +20,12 @@ bool Material::init() {
         return false;
     }
     
-    return shaderProgram->link();
+    if (!shaderProgram->link()) {
+        return false;
+    }
+
+    shaderProgram->setUniformBuffer("MaterialData", 1, &baseColor, sizeof(baseColor));
+    return true;
 }
 
 void Material::setContext(void* context) {
@@ -31,6 +37,12 @@ void Material::setContext(void* context) {
 void Material::use() { 
     if(shaderProgram) {
         shaderProgram->use();
-        shaderProgram->setUniformBuffer("MaterialData", 1, &baseColor, sizeof(baseColor));
     } 
+}
+
+void Material::setBaseColor(const ColorRGBA color) {
+    baseColor = color;
+    if (shaderProgram) {
+        shaderProgram->setUniformBuffer("MaterialData", 1, &baseColor, sizeof(baseColor));
+    }
 }
