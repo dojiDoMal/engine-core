@@ -742,7 +742,7 @@ void VulkanRendererBackend::draw(const Mesh& mesh) {
     vkCmdDraw(commandBuffers[currentImageIndex], mesh.getVertices().size() / 3, 1, 0, 0);
 }
 
-void VulkanRendererBackend::setUniforms(unsigned int shaderProgram) {
+void VulkanRendererBackend::setUniforms(void* shaderProgram) {
     if (!mainCamera) return;
     
     glm::mat4 model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1.0f, 0.0f, 1.0f));
@@ -758,8 +758,8 @@ void VulkanRendererBackend::setUniforms(unsigned int shaderProgram) {
     glm::mat4 projection = glm::perspective(
         glm::radians(mainCamera->getFov()), 
         mainCamera->getAspectRatio(), 
-        mainCamera->getNear(), 
-        mainCamera->getFar()
+        mainCamera->getNearDistance(), 
+        mainCamera->getFarDistance()
     );
     
     struct UniformBufferObject {

@@ -5,7 +5,7 @@ enum class GraphicsAPI {
     OPENGL,
     WEBGL,
     VULKAN,
-    DIRECTX11
+    DIRECTX12
 };
 
 #endif // GRAPHICS_API_HPP

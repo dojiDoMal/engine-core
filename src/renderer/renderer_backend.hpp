@@ -22,7 +22,7 @@ public:
     virtual unsigned int createCubemapTexture(const std::vector<std::string>& faces) = 0;
     virtual GraphicsAPI getGraphicsAPI() const = 0;
     virtual void onCameraSet() = 0;
-    virtual void setUniforms(unsigned int shaderProgram) = 0;
+    virtual void setUniforms(void* shaderProgram) = 0;
     virtual void renderSkybox(const Mesh& mesh, unsigned int shaderProgram, unsigned int textureID) = 0;
     
     Camera* getCamera(){ return this->mainCamera; }

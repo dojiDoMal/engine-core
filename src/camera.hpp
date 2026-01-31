@@ -12,8 +12,8 @@ private:
     Vector3 position = {0.0f, 2.0f, 2.0f};
     std::unique_ptr<Skybox> skybox;
     float fov = 45.0f;
-    float near = 0.1f;
-    float far = 100.0f;
+    float nearDistance = 0.1f;
+    float farDistance = 100.0f;
     float width = 800.0f;
     float height = 600.0f;
 
@@ -29,10 +29,10 @@ public:
     }
     void setFov(float fov) { this->fov = fov; }
     float getFov() const { return fov; }
-    void setNear(float near) { this->near = near; }
-    float getNear() const { return near; }
-    void setFar(float far) { this->far = far; }
-    float getFar() const { return far; }
+    void setNearDistance(float nearDistance) { this->nearDistance = nearDistance; }
+    float getNearDistance() const { return nearDistance; }
+    void setFarDistance(float farDistance) { this->farDistance = farDistance; }
+    float getFarDistance() const { return farDistance; }
     void setWidth(float width) { this->width = width; }
     float getWidth() const { return width; }
     void setHeight(float height) { this->height = height; }

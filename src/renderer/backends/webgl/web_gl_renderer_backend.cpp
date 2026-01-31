@@ -73,7 +73,7 @@ void WebGLRendererBackend::setUniforms(unsigned int shaderProgram) {
 
     glm::mat4 projection =
         glm::perspective(glm::radians(mainCamera->getFov()), mainCamera->getAspectRatio(),
-                         mainCamera->getNear(), mainCamera->getFar());
+                         mainCamera->getNearDistance(), mainCamera->getFarDistance());
 
     GLint loc = glGetUniformLocation(shaderProgram, "model");
     //if (loc == -1)
@@ -148,7 +148,7 @@ void WebGLRendererBackend::renderSkybox(const Mesh& mesh, unsigned int shaderPro
     glm::mat4 view = glm::mat4(glm::mat3(camView));
     glm::mat4 projection =
         glm::perspective(glm::radians(mainCamera->getFov()), mainCamera->getAspectRatio(),
-                         mainCamera->getNear(), mainCamera->getFar());
+                         mainCamera->getNearDistance(), mainCamera->getFarDistance());
 
     GLuint blockIndex = glGetUniformBlockIndex(shaderProgram, "type_Matrices");
     if (blockIndex != GL_INVALID_INDEX) {

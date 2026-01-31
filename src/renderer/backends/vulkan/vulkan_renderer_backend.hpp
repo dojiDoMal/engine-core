@@ -68,7 +68,7 @@ public:
     bool initWindowContext() override;
     void clear() override;
     void draw(const Mesh&) override;
-    void setUniforms(unsigned int shaderProgram) override;
+    void setUniforms(void* shaderProgram) override;
     void onCameraSet() override;
     unsigned int createCubemapTexture(const std::vector<std::string>& faces) override;
     GraphicsAPI getGraphicsAPI() const override;

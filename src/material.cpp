@@ -3,7 +3,9 @@
 #include "shader_program_factory.hpp"
 
 Material::Material(GraphicsAPI api) : api(api) {
-    shaderProgram = ShaderProgramFactory::create(api);
+    if (api == GraphicsAPI::OPENGL || api == GraphicsAPI::WEBGL) {
+        shaderProgram = ShaderProgramFactory::create(api);
+    }
 }
 
 bool Material::init() {
@@ -29,7 +31,7 @@ bool Material::init() {
 }
 
 void Material::setContext(void* context) {
-    if (api == GraphicsAPI::DIRECTX11){
+    if (api == GraphicsAPI::DIRECTX12 || api == GraphicsAPI::VULKAN) {
         shaderProgram = ShaderProgramFactory::create(api, context);
     }
 }

@@ -47,30 +47,41 @@ void Renderer::clearScreen()
 }
 
 void Renderer::renderGameObject(GameObject& gameObject) {
+    LOG_INFO("renderGameObject start");
+    
     auto mesh = gameObject.getMesh();
     if (!mesh) {
-        LOG_INFO((std::string)"Mesh is null!");
+        LOG_INFO("Mesh is null!");
         return;
     }
+    LOG_INFO("Mesh OK");
 
     auto meshRenderer = gameObject.getMeshRenderer();
     if (!meshRenderer) {
-        LOG_INFO((std::string)"MeshRenderer is null!");
+        LOG_INFO("MeshRenderer is null!");
         return;
     }
+    LOG_INFO("MeshRenderer OK");
 
     auto mat = meshRenderer->getMaterial();
     if (!mat) {
-        LOG_INFO((std::string)"Material is null!");
+        LOG_INFO("Material is null!");
         return;
     }
+    LOG_INFO("Material OK");
+    
     mat->use();
+    LOG_INFO("Material use() OK");
 
     auto program = mat->getProgram();
     if (program && program->isValid()) {
+        LOG_INFO("Program valid");
+        
         auto value = reinterpret_cast<std::uintptr_t>(program->getHandle());
         unsigned int shader = static_cast<unsigned int>(value);
-        backend->setUniforms(shader);
+        backend->setUniforms(program);
+        
+        LOG_INFO("setUniforms OK");
         
         auto& lights = backend->getLights();
         if (!lights.empty()) {
@@ -81,8 +92,11 @@ void Renderer::renderGameObject(GameObject& gameObject) {
         return;
     }
     
+    LOG_INFO("About to renderMesh");
     renderMesh(*mesh);
+    LOG_INFO("renderMesh OK");
 }
+
 
 void Renderer::render(const std::vector<GameObject*>& objects) {
     for (const auto& go : objects) {

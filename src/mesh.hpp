@@ -46,6 +46,10 @@ public:
   void *getMeshHandle() const {
     return meshBuffer ? meshBuffer->getHandle() : nullptr;
   }
+
+  MeshBuffer* getBuffer() const {
+    return meshBuffer.get();
+  }
 };
 
 #endif // MESH_HPP

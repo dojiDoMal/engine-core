@@ -70,7 +70,7 @@ void OpenGLRendererBackend::draw(const Mesh& mesh)
     glBindVertexArray(0);
 }
 
-void OpenGLRendererBackend::setUniforms(unsigned int shaderProgram) {
+void OpenGLRendererBackend::setUniforms(void* shaderProgram) {
 
     if (!mainCamera) {
         LOG_ERROR("mainCamera is null");
@@ -90,8 +90,8 @@ void OpenGLRendererBackend::setUniforms(unsigned int shaderProgram) {
     glm::mat4 projection = glm::perspective(
         glm::radians(mainCamera->getFov()), 
         mainCamera->getAspectRatio(), 
-        mainCamera->getNear(), 
-        mainCamera->getFar());
+        mainCamera->getNearDistance(), 
+        mainCamera->getFarDistance());
 
     glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(model));
@@ -150,8 +150,8 @@ void OpenGLRendererBackend::renderSkybox(const Mesh& mesh, unsigned int shaderPr
     glm::mat4 projection = glm::perspective(
         glm::radians(mainCamera->getFov()), 
         mainCamera->getAspectRatio(), 
-        mainCamera->getNear(), 
-        mainCamera->getFar());
+        mainCamera->getNearDistance(), 
+        mainCamera->getFarDistance());
     
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));

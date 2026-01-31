@@ -16,6 +16,9 @@ std::string SceneLoader::getShaderPath(const std::string& basePath, GraphicsAPI 
     if (api == GraphicsAPI::VULKAN) {
         return basePath + ".spv";
     }
+    if (api == GraphicsAPI::DIRECTX12) {
+        return basePath + ".cso";
+    }
     return basePath;
 }
 
@@ -78,6 +81,7 @@ std::unique_ptr<Camera> SceneLoader::loadCamera(const std::string& filepath,
             getShaderPath(cam.skybox.material.fragmentShaderPath, graphicsAPI), ShaderType::FRAGMENT, graphicsAPI, &rendererBackend);
 
         auto skyboxMaterial = std::make_unique<Material>(graphicsAPI);
+        skyboxMaterial->setContext(&rendererBackend);
         skyboxMaterial->setVertexShader(std::move(skyboxVertexShaderPtr));
         skyboxMaterial->setFragmentShader(std::move(skyboxFragmentShaderPtr));
         skyboxMaterial->init();
@@ -119,6 +123,7 @@ std::vector<std::unique_ptr<GameObject>> SceneLoader::loadMeshes(const std::stri
             getShaderPath(meshData.material.fragmentShaderPath, api), ShaderType::FRAGMENT, api, backend);
 
         auto material = std::make_unique<Material>(api);
+        material->setContext(backend);
         material->setVertexShader(std::move(vertexShader));
         material->setFragmentShader(std::move(fragmentShader));
         material->setBaseColor(meshData.material.color);

@@ -83,6 +83,7 @@ void main_loop() {
         }
 
         windowRenderer->clearScreen();
+
         windowRenderer->render(gameObjects.get());
 
         if (graphicsAPI == GraphicsAPI::VULKAN) {
@@ -95,19 +96,20 @@ void main_loop() {
 
     SDL_Quit();
 }
+
 #endif
 
 int main(int argc, char* argv[]) {
-    Logger::init("engine");
+        Logger::init("engine");
 
-    init();
+        init();
 
 #ifdef PLATFORM_WEBGL
-    emscripten_set_main_loop(main_loop, 0, 1);
+        emscripten_set_main_loop(main_loop, 0, 1);
 #else
-    main_loop();
+        main_loop();
 #endif
 
-    Logger::shutdown();
-    return 0;
+        Logger::shutdown();
+        return 0;
 }
