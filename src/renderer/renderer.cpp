@@ -74,7 +74,7 @@ void Renderer::renderGameObject(GameObject& gameObject) {
         
         auto& lights = backend->getLights();
         if (!lights.empty()) {
-            program->setUniformBuffer("LightData", 2, lights[0].direction, sizeof(float) * 3);
+            program->setUniformBuffer("LightData", 2, &lights[0].direction, sizeof(float) * 3);
         }
     } else {
         LOG_ERROR("Invalid shader program");

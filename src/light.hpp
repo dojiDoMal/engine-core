@@ -1,6 +1,7 @@
 #ifndef LIGHT_HPP
 #define LIGHT_HPP
 
+#include "vector3.hpp"
 #include <cstdint>
 
 enum class LightType : uint8_t {
@@ -11,7 +12,7 @@ enum class LightType : uint8_t {
 
 struct Light {
     LightType type;
-    float direction[3];
+    Vector3 direction;
     //float position[3];
 };
 

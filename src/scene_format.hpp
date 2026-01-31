@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "color.hpp"
+#include "vector3.hpp"
 
 struct MaterialData {
   char vertexShaderPath[256];
@@ -17,7 +18,7 @@ struct SkyboxData {
 
 struct LightData {
     uint8_t type;  // 0=DIRECTIONAL, 1=POINT, 2=SPOT
-    float direction[3];
+    Vector3 direction;
     //float position[3];
 };
 

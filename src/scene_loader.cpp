@@ -151,9 +151,7 @@ std::vector<Light> SceneLoader::loadLights(const std::string& filepath) {
     for (uint32_t i = 0; i < scene.lightCount; i++) {
         Light light;
         light.type = static_cast<LightType>(scene.lights[i].type);
-        light.direction[0] = scene.lights[i].direction[0];
-        light.direction[1] = scene.lights[i].direction[1];
-        light.direction[2] = scene.lights[i].direction[2];
+        light.direction = scene.lights[i].direction;
         lights.push_back(light);
     }
     return lights;

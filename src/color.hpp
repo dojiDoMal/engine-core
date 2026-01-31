@@ -2,7 +2,10 @@
 #define COLOR_HPP
 
 struct ColorRGBA {
-  float r, g, b, a;
+    union {
+        struct { float r, g, b, a; };
+        float v[4];
+    };
 };
 
 namespace COLOR {
