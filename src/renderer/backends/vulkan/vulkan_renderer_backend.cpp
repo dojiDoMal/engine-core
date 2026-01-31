@@ -327,8 +327,8 @@ bool VulkanRendererBackend::createDescriptorSetLayout() {
 
 bool VulkanRendererBackend::createGraphicsPipeline() {
     // Carregar shaders SPIR-V
-    std::ifstream vertFile("phong.vxs.spv", std::ios::ate | std::ios::binary);
-    std::ifstream fragFile("phong.pxs.spv", std::ios::ate | std::ios::binary);
+    std::ifstream vertFile("unlit.vxs.spv", std::ios::ate | std::ios::binary);
+    std::ifstream fragFile("unlit.pxs.spv", std::ios::ate | std::ios::binary);
     
     if (!vertFile.is_open() || !fragFile.is_open()) {
         printf("Failed to open shader files\n");
