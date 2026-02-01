@@ -7,6 +7,7 @@
 #else
 #include "renderer/backends/opengl/open_gl_renderer_backend.hpp"
 #include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
+#include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
 #endif
 
 #include "window_manager.hpp"
@@ -109,6 +110,31 @@ bool WindowManager::init(GraphicsAPI api){
         vkBackend->setSurface(surface);
     }
     #endif
+    else if (api == GraphicsAPI::DIRECTX12) {
+        auto* d3d12Backend = new D3D12RendererBackend();
+        renderer->setRendererBackend(d3d12Backend);
+        
+        win = SDL_CreateWindow(
+            this->title.c_str(),
+            SDL_WINDOWPOS_CENTERED,
+            SDL_WINDOWPOS_CENTERED,
+            this->width,
+            this->height,
+            SDL_WINDOW_SHOWN
+        );
+        
+        if(!win) {
+            delete d3d12Backend;
+            delete renderer;
+            SDL_Quit();
+            return false;
+        }
+        
+        SDL_SysWMinfo wmInfo;
+        SDL_VERSION(&wmInfo.version);
+        SDL_GetWindowWMInfo(win, &wmInfo);
+        d3d12Backend->setHwnd(wmInfo.info.win.window);
+    }
 
     this->setWindow(win);
     LOG_INFO("Initializing renderer!");

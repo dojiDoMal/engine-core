@@ -5,6 +5,7 @@
 #else
 #include "renderer/backends/opengl/open_gl_shader_program.hpp"
 #include "renderer/backends/vulkan/vulkan_shader_program.hpp"
+#include "renderer/backends/directx12/d3d12_shader_program.hpp"
 #endif
 
 std::unique_ptr<ShaderProgram> ShaderProgramFactory::create(GraphicsAPI api, void* context) {
@@ -17,6 +18,8 @@ std::unique_ptr<ShaderProgram> ShaderProgramFactory::create(GraphicsAPI api, voi
             return std::make_unique<OpenGLShaderProgram>();
         case GraphicsAPI::VULKAN:
             return std::make_unique<VulkanShaderProgram>(static_cast<VulkanRendererBackend*>(context));
+        case GraphicsAPI::DIRECTX12:
+            return std::make_unique<D3D12ShaderProgram>(static_cast<D3D12RendererBackend*>(context));
         #endif   
         default:
             return nullptr;

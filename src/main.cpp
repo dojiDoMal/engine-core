@@ -1,3 +1,4 @@
+#include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
 #include "stb_image_header.hpp"
 
 #include "game_object_manager.hpp"
@@ -18,7 +19,7 @@
 GraphicsAPI graphicsAPI = GraphicsAPI::WEBGL;
 #else
 // Escolha a API aqui: GraphicsAPI::OPENGL ou GraphicsAPI::VULKAN
-GraphicsAPI graphicsAPI = GraphicsAPI::VULKAN;
+GraphicsAPI graphicsAPI = GraphicsAPI::DIRECTX12;
 #endif
 
 GameObjectManager gameObjects;
@@ -89,6 +90,9 @@ void main_loop() {
         if (graphicsAPI == GraphicsAPI::VULKAN) {
             auto* vkBackend = dynamic_cast<VulkanRendererBackend*>(rendererBackend);
             if (vkBackend) vkBackend->present();
+        } else if (graphicsAPI == GraphicsAPI::DIRECTX12) {
+            auto* d3d12Backend = dynamic_cast<D3D12RendererBackend*>(rendererBackend);
+            if (d3d12Backend) d3d12Backend->present();
         } else {
             SDL_GL_SwapWindow(currentWindow);
         }

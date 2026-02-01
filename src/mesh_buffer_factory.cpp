@@ -5,6 +5,7 @@
 #else
 #include "renderer/backends/opengl/open_gl_mesh_buffer.hpp"
 #include "renderer/backends/vulkan/vulkan_mesh_buffer.hpp"
+#include "renderer/backends/directx12/d3d12_mesh_buffer.hpp"
 #endif
 
 std::unique_ptr<MeshBuffer> MeshBufferFactory::create(GraphicsAPI api, void* context) {
@@ -17,6 +18,8 @@ std::unique_ptr<MeshBuffer> MeshBufferFactory::create(GraphicsAPI api, void* con
             return std::make_unique<OpenGLMeshBuffer>();
         case GraphicsAPI::VULKAN:
             return std::make_unique<VulkanMeshBuffer>(static_cast<VulkanRendererBackend*>(context));
+        case GraphicsAPI::DIRECTX12:
+            return std::make_unique<D3D12MeshBuffer>(static_cast<D3D12RendererBackend*>(context));
         #endif
         default:
             return nullptr;
