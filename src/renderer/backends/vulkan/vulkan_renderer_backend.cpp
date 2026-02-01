@@ -1,6 +1,6 @@
-#include <sstream>
 #define CLASS_NAME "VulkanRendererBackend"
 
+#include <sstream>
 #include "vulkan_renderer_backend.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
@@ -46,6 +46,8 @@ VulkanRendererBackend::~VulkanRendererBackend() {
         
         if (uniformBuffer) vkDestroyBuffer(device, uniformBuffer, nullptr);
         if (uniformBufferMemory) vkFreeMemory(device, uniformBufferMemory, nullptr);
+        if (materialBuffer) vkDestroyBuffer(device, materialBuffer, nullptr);
+        if (materialBufferMemory) vkFreeMemory(device, materialBufferMemory, nullptr);
         
         if (descriptorPool) vkDestroyDescriptorPool(device, descriptorPool, nullptr);
         if (descriptorSetLayout) vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
@@ -75,6 +77,7 @@ bool VulkanRendererBackend::init() {
     if (!createCommandPool()) { printf("Failed to create command pool\n"); return false; }
     if (!createDescriptorSetLayout()) { printf("Failed to create descriptor set layout\n"); return false; }
     if (!createUniformBuffer()) { printf("Failed to create uniform buffer\n"); return false; }
+    if (!createMaterialBuffer()) { printf("Failed to create material buffer\n"); return false; }
     if (!createDescriptorPool()) { printf("Failed to create descriptor pool\n"); return false; }
     if (!createGraphicsPipeline()) { printf("Failed to create graphics pipeline\n"); return false; }
     if (!createCommandBuffers()) { printf("Failed to create command buffers\n"); return false; }
@@ -311,16 +314,22 @@ bool VulkanRendererBackend::createRenderPass() {
 }
 
 bool VulkanRendererBackend::createDescriptorSetLayout() {
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    VkDescriptorSetLayoutBinding bindings[2] = {};
+    
+    bindings[0].binding = 0;
+    bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[0].descriptorCount = 1;
+    bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    
+    bindings[1].binding = 1;
+    bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[1].descriptorCount = 1;
+    bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uboLayoutBinding;
+    layoutInfo.bindingCount = 2;
+    layoutInfo.pBindings = bindings;
     
     return vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) == VK_SUCCESS;
 }
@@ -612,10 +621,40 @@ bool VulkanRendererBackend::createUniformBuffer() {
     return true;
 }
 
+bool VulkanRendererBackend::createMaterialBuffer() {
+    VkDeviceSize bufferSize = sizeof(float) * 4;
+    
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = bufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    
+    if (vkCreateBuffer(device, &bufferInfo, nullptr, &materialBuffer) != VK_SUCCESS) {
+        return false;
+    }
+    
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device, materialBuffer, &memRequirements);
+    
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, 
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &materialBufferMemory) != VK_SUCCESS) {
+        return false;
+    }
+    
+    vkBindBufferMemory(device, materialBuffer, materialBufferMemory, 0);
+    return true;
+}
+
 bool VulkanRendererBackend::createDescriptorPool() {
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = 1;
+    poolSize.descriptorCount = 2;
     
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -638,21 +677,33 @@ bool VulkanRendererBackend::createDescriptorPool() {
         return false;
     }
     
-    VkDescriptorBufferInfo bufferInfo{};
-    bufferInfo.buffer = uniformBuffer;
-    bufferInfo.offset = 0;
-    bufferInfo.range = 4 * sizeof(glm::mat4);
+    VkDescriptorBufferInfo bufferInfos[2] = {};
+    bufferInfos[0].buffer = uniformBuffer;
+    bufferInfos[0].offset = 0;
+    bufferInfos[0].range = 4 * sizeof(glm::mat4);
     
-    VkWriteDescriptorSet descriptorWrite{};
-    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrite.dstSet = descriptorSets[0];
-    descriptorWrite.dstBinding = 0;
-    descriptorWrite.dstArrayElement = 0;
-    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pBufferInfo = &bufferInfo;
+    bufferInfos[1].buffer = materialBuffer;
+    bufferInfos[1].offset = 0;
+    bufferInfos[1].range = sizeof(float) * 4;
     
-    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+    VkWriteDescriptorSet descriptorWrites[2] = {};
+    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[0].dstSet = descriptorSets[0];
+    descriptorWrites[0].dstBinding = 0;
+    descriptorWrites[0].dstArrayElement = 0;
+    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrites[0].descriptorCount = 1;
+    descriptorWrites[0].pBufferInfo = &bufferInfos[0];
+    
+    descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[1].dstSet = descriptorSets[0];
+    descriptorWrites[1].dstBinding = 1;
+    descriptorWrites[1].dstArrayElement = 0;
+    descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrites[1].descriptorCount = 1;
+    descriptorWrites[1].pBufferInfo = &bufferInfos[1];
+    
+    vkUpdateDescriptorSets(device, 2, descriptorWrites, 0, nullptr);
     
     return true;
 }
@@ -761,6 +812,8 @@ void VulkanRendererBackend::setUniforms(void* shaderProgram) {
         mainCamera->getNearDistance(), 
         mainCamera->getFarDistance()
     );
+    // fix temporario pra deixar eixo y igual opengl
+    projection[1][1] *= -1;
     
     struct UniformBufferObject {
         glm::mat4 model;

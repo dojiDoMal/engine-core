@@ -33,6 +33,8 @@ private:
     
     VkBuffer uniformBuffer = VK_NULL_HANDLE;
     VkDeviceMemory uniformBufferMemory = VK_NULL_HANDLE;
+    VkBuffer materialBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory materialBufferMemory = VK_NULL_HANDLE;
     
     VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
     VkSemaphore renderFinishedSemaphore = VK_NULL_HANDLE;
@@ -56,6 +58,7 @@ private:
     bool createCommandPool();
     bool createDepthResources();
     bool createUniformBuffer();
+    bool createMaterialBuffer();
     bool createDescriptorPool();
     bool createCommandBuffers();
     bool createSyncObjects();
@@ -79,6 +82,7 @@ public:
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; }
     VkCommandPool getCommandPool() const { return commandPool; }
     VkInstance getInstance() const { return instance; }
+    VkDeviceMemory getMaterialBufferMemory() const { return materialBufferMemory; }
     void setSurface(VkSurfaceKHR surf) { surface = surf; }
 };
 

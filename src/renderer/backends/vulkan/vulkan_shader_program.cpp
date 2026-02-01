@@ -1,6 +1,7 @@
 #include "vulkan_shader_program.hpp"
 #include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
 #include "shader_asset.hpp"
+#include <cstring>
 
 VulkanShaderProgram::~VulkanShaderProgram() {
     if (pipeline) {
@@ -26,6 +27,15 @@ bool VulkanShaderProgram::link() {
 
 void VulkanShaderProgram::use() {
     // Em Vulkan, "use" é feito via vkCmdBindPipeline no command buffer
+}
+
+void VulkanShaderProgram::setUniformBuffer(const char* name, int binding, const void* data, size_t size) {
+    if (binding == 1 && backend) {
+        void* mapped;
+        vkMapMemory(backend->getDevice(), backend->getMaterialBufferMemory(), 0, size, 0, &mapped);
+        memcpy(mapped, data, size);
+        vkUnmapMemory(backend->getDevice(), backend->getMaterialBufferMemory());
+    }
 }
 
 void* VulkanShaderProgram::getHandle() const {
