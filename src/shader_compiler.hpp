@@ -2,13 +2,7 @@
 #define SHADER_COMPILER_HPP
 
 #include <string>
-
-enum class ShaderType {
-    VERTEX,
-    FRAGMENT,
-    GEOMETRY,
-    COMPUTE
-};
+#include "shader_type.hpp"
 
 class ShaderCompiler {
 public:

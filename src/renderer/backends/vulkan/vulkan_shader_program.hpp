@@ -1,7 +1,8 @@
 #ifndef VULKAN_SHADER_PROGRAM_HPP
 #define VULKAN_SHADER_PROGRAM_HPP
 
-#include "shader_program.hpp"
+#include "../../../shader_program.hpp"
+#include "../../../shader_type.hpp"
 #include <vulkan/vulkan.h>
 #include <vector>
 
@@ -11,8 +12,11 @@ class VulkanShaderProgram : public ShaderProgram {
 private:
     VulkanRendererBackend* backend;
     std::vector<VkShaderModule> shaderModules;
+    std::vector<ShaderType> shaderTypes;
     VkPipeline pipeline = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    
+    bool createPipeline();
     
 public:
     VulkanShaderProgram(VulkanRendererBackend* backend) : backend(backend) {}

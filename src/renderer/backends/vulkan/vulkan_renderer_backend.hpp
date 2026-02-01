@@ -15,8 +15,6 @@ private:
     VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkSwapchainKHR swapchain = VK_NULL_HANDLE;
     VkRenderPass renderPass = VK_NULL_HANDLE;
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    VkPipeline graphicsPipeline = VK_NULL_HANDLE;
     VkCommandPool commandPool = VK_NULL_HANDLE;
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
@@ -53,7 +51,6 @@ private:
     bool createImageViews();
     bool createRenderPass();
     bool createDescriptorSetLayout();
-    bool createGraphicsPipeline();
     bool createFramebuffers();
     bool createCommandPool();
     bool createDepthResources();
@@ -83,6 +80,9 @@ public:
     VkCommandPool getCommandPool() const { return commandPool; }
     VkInstance getInstance() const { return instance; }
     VkDeviceMemory getMaterialBufferMemory() const { return materialBufferMemory; }
+    VkExtent2D getSwapchainExtent() const { return swapchainExtent; }
+    VkRenderPass getRenderPass() const { return renderPass; }
+    VkDescriptorSetLayout getDescriptorSetLayout() const { return descriptorSetLayout; }
     void setSurface(VkSurfaceKHR surf) { surface = surf; }
 };
 

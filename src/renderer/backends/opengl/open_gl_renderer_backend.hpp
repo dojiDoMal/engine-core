@@ -2,9 +2,9 @@
 #define OPEN_GL_RENDERER_BACKEND_HPP
 
 #include <GL/glew.h>
-#include "graphics_api.hpp"
+#include "../../../graphics_api.hpp"
 #include "../../renderer_backend.hpp"
-#include "mesh.hpp"
+#include "../../../mesh.hpp"
 #include <vector>
 #include <string>
 
