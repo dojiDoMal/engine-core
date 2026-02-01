@@ -33,6 +33,8 @@ private:
     VkDeviceMemory uniformBufferMemory = VK_NULL_HANDLE;
     VkBuffer materialBuffer = VK_NULL_HANDLE;
     VkDeviceMemory materialBufferMemory = VK_NULL_HANDLE;
+    VkBuffer lightDataBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory lightDataBufferMemory = VK_NULL_HANDLE;
     
     VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
     VkSemaphore renderFinishedSemaphore = VK_NULL_HANDLE;
@@ -56,6 +58,7 @@ private:
     bool createDepthResources();
     bool createUniformBuffer();
     bool createMaterialBuffer();
+    bool createLightDataBuffer();
     bool createDescriptorPool();
     bool createCommandBuffers();
     bool createSyncObjects();
@@ -80,6 +83,7 @@ public:
     VkCommandPool getCommandPool() const { return commandPool; }
     VkInstance getInstance() const { return instance; }
     VkDeviceMemory getMaterialBufferMemory() const { return materialBufferMemory; }
+    VkDeviceMemory getLightDataBufferMemory() const { return lightDataBufferMemory; }
     VkExtent2D getSwapchainExtent() const { return swapchainExtent; }
     VkRenderPass getRenderPass() const { return renderPass; }
     VkDescriptorSetLayout getDescriptorSetLayout() const { return descriptorSetLayout; }

@@ -4,6 +4,7 @@
 #include <sstream>
 #include "vulkan_renderer_backend.hpp"
 #include "vulkan_shader_program.hpp"
+#include "vulkan_mesh_buffer.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 #include <glm/glm.hpp>
@@ -47,6 +48,8 @@ VulkanRendererBackend::~VulkanRendererBackend() {
         if (uniformBufferMemory) vkFreeMemory(device, uniformBufferMemory, nullptr);
         if (materialBuffer) vkDestroyBuffer(device, materialBuffer, nullptr);
         if (materialBufferMemory) vkFreeMemory(device, materialBufferMemory, nullptr);
+        if (lightDataBuffer) vkDestroyBuffer(device, lightDataBuffer, nullptr);
+        if (lightDataBufferMemory) vkFreeMemory(device, lightDataBufferMemory, nullptr);
         
         if (descriptorPool) vkDestroyDescriptorPool(device, descriptorPool, nullptr);
         if (descriptorSetLayout) vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
@@ -77,6 +80,7 @@ bool VulkanRendererBackend::init() {
     if (!createDescriptorSetLayout()) { printf("Failed to create descriptor set layout\n"); return false; }
     if (!createUniformBuffer()) { printf("Failed to create uniform buffer\n"); return false; }
     if (!createMaterialBuffer()) { printf("Failed to create material buffer\n"); return false; }
+    if (!createLightDataBuffer()) { printf("Failed to create light data buffer\n"); return false; }
     if (!createDescriptorPool()) { printf("Failed to create descriptor pool\n"); return false; }
     if (!createCommandBuffers()) { printf("Failed to create command buffers\n"); return false; }
     if (!createSyncObjects()) { printf("Failed to create sync objects\n"); return false; }
@@ -312,7 +316,7 @@ bool VulkanRendererBackend::createRenderPass() {
 }
 
 bool VulkanRendererBackend::createDescriptorSetLayout() {
-    VkDescriptorSetLayoutBinding bindings[2] = {};
+    VkDescriptorSetLayoutBinding bindings[3] = {};
     
     bindings[0].binding = 0;
     bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -324,9 +328,14 @@ bool VulkanRendererBackend::createDescriptorSetLayout() {
     bindings[1].descriptorCount = 1;
     bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     
+    bindings[2].binding = 2;
+    bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[2].descriptorCount = 1;
+    bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 2;
+    layoutInfo.bindingCount = 3;
     layoutInfo.pBindings = bindings;
     
     return vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) == VK_SUCCESS;
@@ -482,10 +491,40 @@ bool VulkanRendererBackend::createMaterialBuffer() {
     return true;
 }
 
+bool VulkanRendererBackend::createLightDataBuffer() {
+    VkDeviceSize bufferSize = sizeof(float) * 3;
+    
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = bufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    
+    if (vkCreateBuffer(device, &bufferInfo, nullptr, &lightDataBuffer) != VK_SUCCESS) {
+        return false;
+    }
+    
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device, lightDataBuffer, &memRequirements);
+    
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, 
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &lightDataBufferMemory) != VK_SUCCESS) {
+        return false;
+    }
+    
+    vkBindBufferMemory(device, lightDataBuffer, lightDataBufferMemory, 0);
+    return true;
+}
+
 bool VulkanRendererBackend::createDescriptorPool() {
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = 2;
+    poolSize.descriptorCount = 3;
     
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -508,7 +547,7 @@ bool VulkanRendererBackend::createDescriptorPool() {
         return false;
     }
     
-    VkDescriptorBufferInfo bufferInfos[2] = {};
+    VkDescriptorBufferInfo bufferInfos[3] = {};
     bufferInfos[0].buffer = uniformBuffer;
     bufferInfos[0].offset = 0;
     bufferInfos[0].range = 4 * sizeof(glm::mat4);
@@ -517,7 +556,11 @@ bool VulkanRendererBackend::createDescriptorPool() {
     bufferInfos[1].offset = 0;
     bufferInfos[1].range = sizeof(float) * 4;
     
-    VkWriteDescriptorSet descriptorWrites[2] = {};
+    bufferInfos[2].buffer = lightDataBuffer;
+    bufferInfos[2].offset = 0;
+    bufferInfos[2].range = sizeof(float) * 3;
+    
+    VkWriteDescriptorSet descriptorWrites[3] = {};
     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[0].dstSet = descriptorSets[0];
     descriptorWrites[0].dstBinding = 0;
@@ -534,7 +577,15 @@ bool VulkanRendererBackend::createDescriptorPool() {
     descriptorWrites[1].descriptorCount = 1;
     descriptorWrites[1].pBufferInfo = &bufferInfos[1];
     
-    vkUpdateDescriptorSets(device, 2, descriptorWrites, 0, nullptr);
+    descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[2].dstSet = descriptorSets[0];
+    descriptorWrites[2].dstBinding = 2;
+    descriptorWrites[2].dstArrayElement = 0;
+    descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrites[2].descriptorCount = 1;
+    descriptorWrites[2].pBufferInfo = &bufferInfos[2];
+    
+    vkUpdateDescriptorSets(device, 3, descriptorWrites, 0, nullptr);
     
     return true;
 }
@@ -615,9 +666,10 @@ void VulkanRendererBackend::clear() {
 }
 
 void VulkanRendererBackend::draw(const Mesh& mesh) {
-    VkBuffer vertexBuffers[] = {static_cast<VkBuffer>(mesh.getHandle())};
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(commandBuffers[currentImageIndex], 0, 1, vertexBuffers, offsets);
+    auto* vkMeshBuffer = static_cast<VulkanMeshBuffer*>(mesh.getBuffer());
+    VkBuffer vertexBuffers[] = {vkMeshBuffer->getVertexBuffer(), vkMeshBuffer->getNormalBuffer()};
+    VkDeviceSize offsets[] = {0, 0};
+    vkCmdBindVertexBuffers(commandBuffers[currentImageIndex], 0, 2, vertexBuffers, offsets);
     vkCmdDraw(commandBuffers[currentImageIndex], mesh.getVertices().size() / 3, 1, 0, 0);
 }
 
