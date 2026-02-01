@@ -1,4 +1,7 @@
+#include <stdexcept>
 #define CLASS_NAME "WindowManager"
+#include "log_macros.hpp"
+#include "renderer/renderer_backend.hpp"
 #ifdef PLATFORM_WEBGL
 #include "renderer/backends/webgl/web_gl_renderer_backend.hpp"
 #else
@@ -9,7 +12,6 @@
 #include "window_manager.hpp"
 #include <SDL2/SDL_vulkan.h>
 #include <SDL2/SDL_syswm.h>
-#include "log_macros.hpp"
 
 WindowManager::WindowManager(GraphicsAPI api) {
     init(api);
@@ -31,7 +33,7 @@ bool WindowManager::init(GraphicsAPI api){
     }
 
     renderer = new Renderer();
-    SDL_Window* window = nullptr;
+    SDL_Window* win = nullptr;
 
     if (api == GraphicsAPI::OPENGL || api == GraphicsAPI::WEBGL) {
 
@@ -43,7 +45,7 @@ bool WindowManager::init(GraphicsAPI api){
 
         renderer->initContext();
         
-        window = SDL_CreateWindow(
+        win = SDL_CreateWindow(
             this->title.c_str(),
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
@@ -52,25 +54,26 @@ bool WindowManager::init(GraphicsAPI api){
             SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
         );
         
-        if(!window) {
+        if(!win) {
             SDL_Quit();
             return false;
         }
         
-        glContext = SDL_GL_CreateContext(window);
+        glContext = SDL_GL_CreateContext(win);
         if(!glContext) {
-            SDL_DestroyWindow(window);
+            SDL_DestroyWindow(win);
             SDL_Quit();
             return false;
         }
     } 
     #ifndef PLATFORM_WEBGL
     else if (api == GraphicsAPI::VULKAN) {
+        LOG_INFO("Creating vulkan backend!");
         auto* vkBackend = new VulkanRendererBackend();
         renderer->setRendererBackend(vkBackend);
         
         // Criar janela PRIMEIRO para SDL poder fornecer extensões
-        window = SDL_CreateWindow(
+        win = SDL_CreateWindow(
             this->title.c_str(),
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
@@ -79,18 +82,27 @@ bool WindowManager::init(GraphicsAPI api){
             SDL_WINDOW_VULKAN | SDL_WINDOW_SHOWN
         );
         
-        if(!window) {
+        if(!win) {
+            LOG_ERROR(std::string("Failed to create window: ") + SDL_GetError());
+            delete vkBackend;
+            delete renderer;
             SDL_Quit();
             return false;
         }
+
+        vkBackend->setWindow(win);
         
         // Agora criar instância Vulkan (precisa da janela para extensões)
+        LOG_INFO("Initializing renderer context!");
         renderer->initContext();
         
         // Criar surface Vulkan após ter a janela e instância
         VkSurfaceKHR surface;
-        if (!SDL_Vulkan_CreateSurface(window, vkBackend->getInstance(), &surface)) {
-            SDL_DestroyWindow(window);
+        if (!SDL_Vulkan_CreateSurface(win, vkBackend->getInstance(), &surface)) {
+            LOG_ERROR("Failed to create vulkan surface");
+            SDL_DestroyWindow(win);
+            delete vkBackend;
+            delete renderer;
             SDL_Quit();
             return false;
         }
@@ -98,9 +110,12 @@ bool WindowManager::init(GraphicsAPI api){
     }
     #endif
 
-    this->setWindow(window);
-    //this->renderer = renderer;
-    renderer->init();
+    this->setWindow(win);
+    LOG_INFO("Initializing renderer!");
+    if (!renderer->init()) {
+        LOG_ERROR("Failed to init renderer");
+        return false;
+    }
 
     return true;
 }

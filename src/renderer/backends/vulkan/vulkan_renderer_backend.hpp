@@ -1,6 +1,7 @@
 #ifndef VULKAN_RENDERER_BACKEND_HPP
 #define VULKAN_RENDERER_BACKEND_HPP
 
+#include <SDL_video.h>
 #include <vulkan/vulkan.h>
 #include "../../renderer_backend.hpp"
 #include <vector>
@@ -45,6 +46,7 @@ private:
     uint32_t currentImageIndex = 0;
     VkFormat swapchainFormat;
     VkExtent2D swapchainExtent;
+    SDL_Window* window;
     
     bool createInstance();
     bool pickPhysicalDevice();
@@ -88,6 +90,7 @@ public:
     VkRenderPass getRenderPass() const { return renderPass; }
     VkDescriptorSetLayout getDescriptorSetLayout() const { return descriptorSetLayout; }
     void setSurface(VkSurfaceKHR surf) { surface = surf; }
+    void setWindow(SDL_Window* win) { window = win; }
 };
 
 #endif // VULKAN_RENDERER_BACKEND_HPP

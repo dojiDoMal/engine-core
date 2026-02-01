@@ -124,7 +124,10 @@ bool VulkanRendererBackend::createInstance() {
 bool VulkanRendererBackend::pickPhysicalDevice() {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-    if (deviceCount == 0) return false;
+    if (deviceCount == 0) {
+        LOG_WARN("No physical device found!");
+        return false;
+    }
     
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
@@ -137,15 +140,26 @@ bool VulkanRendererBackend::createLogicalDevice() {
     // Encontrar queue families
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+    
+    LOG_INFO("Queue family count: " + std::to_string(queueFamilyCount));
+
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
     
+    bool foundGraphicsQueue = false;
     for (uint32_t i = 0; i < queueFamilies.size(); i++) {
         if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             graphicsQueueFamily = i;
-            presentQueueFamily = i; // Simplificado
+            presentQueueFamily = i; 
+            foundGraphicsQueue = true;
+            LOG_INFO("Found graphics queue family at index: " + std::to_string(i));
             break;
         }
+    }
+
+    if (!foundGraphicsQueue) {
+        LOG_ERROR("No graphics queue family found!");
+        return false;
     }
     
     float queuePriority = 1.0f;
@@ -167,8 +181,9 @@ bool VulkanRendererBackend::createLogicalDevice() {
     createInfo.enabledExtensionCount = 1;
     createInfo.ppEnabledExtensionNames = deviceExtensions;
     
-    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
-        LOG_ERROR("failed to create logical device!");       
+    VkResult result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
+    if (result != VK_SUCCESS) {
+        LOG_ERROR("Failed to create logical device! Error code: " + std::to_string(result));
         return false;
     }
 
