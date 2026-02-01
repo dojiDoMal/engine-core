@@ -1,7 +1,7 @@
 #ifndef OPEN_GL_SHADER_COMPILER_HPP
 #define OPEN_GL_SHADER_COMPILER_HPP
 
-#include "shader_compiler.hpp"
+#include "../../../shader_compiler.hpp"
 #include <GL/glew.h>
 
 class OpenGLShaderCompiler : public ShaderCompiler {

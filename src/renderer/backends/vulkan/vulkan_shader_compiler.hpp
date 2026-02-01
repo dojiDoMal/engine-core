@@ -1,7 +1,7 @@
 #ifndef VULKAN_SHADER_COMPILER_HPP
 #define VULKAN_SHADER_COMPILER_HPP
 
-#include "shader_compiler.hpp"
+#include "../../../shader_compiler.hpp"
 #include <vulkan/vulkan.h>
 
 class VulkanRendererBackend;

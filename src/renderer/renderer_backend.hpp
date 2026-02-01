@@ -1,10 +1,10 @@
 #ifndef RENDERER_BACKEND_HPP
 #define RENDERER_BACKEND_HPP
 
-#include "graphics_api.hpp"
-#include "mesh.hpp"
-#include "camera.hpp"
-#include "light.hpp"
+#include "../graphics_api.hpp"
+#include "../mesh.hpp"
+#include "../camera.hpp"
+#include "../light.hpp"
 #include <vector>
 
 class RendererBackend{

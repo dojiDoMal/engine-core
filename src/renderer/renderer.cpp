@@ -1,7 +1,9 @@
 #define CLASS_NAME "Renderer"
+#include "../log_macros.hpp"
+
 #include "renderer.hpp"
-#include "game_object.hpp"
-#include "material.hpp"
+#include "../game_object.hpp"
+#include "../material.hpp"
 #include <cstdint>
 #include <cstdio>
 #include "log_macros.hpp"
@@ -47,8 +49,7 @@ void Renderer::clearScreen()
 }
 
 void Renderer::renderGameObject(GameObject& gameObject) {
-    LOG_INFO("renderGameObject start");
-    
+   
     auto mesh = gameObject.getMesh();
     if (!mesh) {
         LOG_INFO("Mesh is null!");
@@ -68,20 +69,15 @@ void Renderer::renderGameObject(GameObject& gameObject) {
         LOG_INFO("Material is null!");
         return;
     }
-    LOG_INFO("Material OK");
     
     mat->use();
     LOG_INFO("Material use() OK");
 
     auto program = mat->getProgram();
-    if (program && program->isValid()) {
-        LOG_INFO("Program valid");
-        
+    if (program && program->isValid()) {        
         auto value = reinterpret_cast<std::uintptr_t>(program->getHandle());
         unsigned int shader = static_cast<unsigned int>(value);
         backend->setUniforms(program);
-        
-        LOG_INFO("setUniforms OK");
         
         auto& lights = backend->getLights();
         if (!lights.empty()) {

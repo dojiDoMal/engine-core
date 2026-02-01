@@ -18,7 +18,7 @@
 GraphicsAPI graphicsAPI = GraphicsAPI::WEBGL;
 #else
 // Escolha a API aqui: GraphicsAPI::OPENGL ou GraphicsAPI::VULKAN
-GraphicsAPI graphicsAPI = GraphicsAPI::OPENGL;
+GraphicsAPI graphicsAPI = GraphicsAPI::VULKAN;
 #endif
 
 GameObjectManager gameObjects;

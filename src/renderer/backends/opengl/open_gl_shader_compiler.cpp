@@ -1,7 +1,7 @@
 #define CLASS_NAME "OpenGLShaderCompiler"
+#include "../../../log_macros.hpp"
 
 #include "open_gl_shader_compiler.hpp"
-#include "log_macros.hpp"
 #include <cstdint>
 #include <fstream>
 #include <sstream>

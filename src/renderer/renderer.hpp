@@ -1,9 +1,9 @@
 #ifndef RENDERER_HPP
 #define RENDERER_HPP
 
-#include "game_object.hpp"
+#include "../game_object.hpp"
+#include "../mesh.hpp"
 #include "renderer_backend.hpp"
-#include "mesh.hpp"
 
 class Material;
 

@@ -1,7 +1,10 @@
-#include <sstream>
 #define CLASS_NAME "VulkanRendererBackend"
+#include "../../../log_macros.hpp"
 
+#include <sstream>
 #include "vulkan_renderer_backend.hpp"
+#include "vulkan_shader_program.hpp"
+#include "vulkan_mesh_buffer.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 #include <glm/glm.hpp>
@@ -32,8 +35,6 @@ VulkanRendererBackend::~VulkanRendererBackend() {
             vkDestroyFramebuffer(device, framebuffer, nullptr);
         }
         
-        if (graphicsPipeline) vkDestroyPipeline(device, graphicsPipeline, nullptr);
-        if (pipelineLayout) vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
         if (renderPass) vkDestroyRenderPass(device, renderPass, nullptr);
         
         for (auto imageView : swapchainImageViews) {
@@ -46,6 +47,10 @@ VulkanRendererBackend::~VulkanRendererBackend() {
         
         if (uniformBuffer) vkDestroyBuffer(device, uniformBuffer, nullptr);
         if (uniformBufferMemory) vkFreeMemory(device, uniformBufferMemory, nullptr);
+        if (materialBuffer) vkDestroyBuffer(device, materialBuffer, nullptr);
+        if (materialBufferMemory) vkFreeMemory(device, materialBufferMemory, nullptr);
+        if (lightDataBuffer) vkDestroyBuffer(device, lightDataBuffer, nullptr);
+        if (lightDataBufferMemory) vkFreeMemory(device, lightDataBufferMemory, nullptr);
         
         if (descriptorPool) vkDestroyDescriptorPool(device, descriptorPool, nullptr);
         if (descriptorSetLayout) vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
@@ -75,8 +80,9 @@ bool VulkanRendererBackend::init() {
     if (!createCommandPool()) { printf("Failed to create command pool\n"); return false; }
     if (!createDescriptorSetLayout()) { printf("Failed to create descriptor set layout\n"); return false; }
     if (!createUniformBuffer()) { printf("Failed to create uniform buffer\n"); return false; }
+    if (!createMaterialBuffer()) { printf("Failed to create material buffer\n"); return false; }
+    if (!createLightDataBuffer()) { printf("Failed to create light data buffer\n"); return false; }
     if (!createDescriptorPool()) { printf("Failed to create descriptor pool\n"); return false; }
-    if (!createGraphicsPipeline()) { printf("Failed to create graphics pipeline\n"); return false; }
     if (!createCommandBuffers()) { printf("Failed to create command buffers\n"); return false; }
     if (!createSyncObjects()) { printf("Failed to create sync objects\n"); return false; }
     
@@ -311,185 +317,29 @@ bool VulkanRendererBackend::createRenderPass() {
 }
 
 bool VulkanRendererBackend::createDescriptorSetLayout() {
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    VkDescriptorSetLayoutBinding bindings[3] = {};
+    
+    bindings[0].binding = 0;
+    bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[0].descriptorCount = 1;
+    bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    
+    bindings[1].binding = 1;
+    bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[1].descriptorCount = 1;
+    bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    
+    bindings[2].binding = 2;
+    bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[2].descriptorCount = 1;
+    bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uboLayoutBinding;
+    layoutInfo.bindingCount = 3;
+    layoutInfo.pBindings = bindings;
     
     return vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) == VK_SUCCESS;
-}
-
-bool VulkanRendererBackend::createGraphicsPipeline() {
-    // Carregar shaders SPIR-V
-    std::ifstream vertFile("unlit.vxs.spv", std::ios::ate | std::ios::binary);
-    std::ifstream fragFile("unlit.pxs.spv", std::ios::ate | std::ios::binary);
-    
-    if (!vertFile.is_open() || !fragFile.is_open()) {
-        printf("Failed to open shader files\n");
-        return false;
-    }
-    
-    size_t vertSize = (size_t)vertFile.tellg();
-    size_t fragSize = (size_t)fragFile.tellg();
-    std::vector<char> vertCode(vertSize);
-    std::vector<char> fragCode(fragSize);
-    
-    vertFile.seekg(0);
-    fragFile.seekg(0);
-    vertFile.read(vertCode.data(), vertSize);
-    fragFile.read(fragCode.data(), fragSize);
-    vertFile.close();
-    fragFile.close();
-    
-    VkShaderModuleCreateInfo vertCreateInfo{};
-    vertCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    vertCreateInfo.codeSize = vertCode.size();
-    vertCreateInfo.pCode = reinterpret_cast<const uint32_t*>(vertCode.data());
-    
-    VkShaderModule vertShaderModule;
-    if (vkCreateShaderModule(device, &vertCreateInfo, nullptr, &vertShaderModule) != VK_SUCCESS) {
-        return false;
-    }
-    
-    VkShaderModuleCreateInfo fragCreateInfo{};
-    fragCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    fragCreateInfo.codeSize = fragCode.size();
-    fragCreateInfo.pCode = reinterpret_cast<const uint32_t*>(fragCode.data());
-    
-    VkShaderModule fragShaderModule;
-    if (vkCreateShaderModule(device, &fragCreateInfo, nullptr, &fragShaderModule) != VK_SUCCESS) {
-        vkDestroyShaderModule(device, vertShaderModule, nullptr);
-        return false;
-    }
-    
-    VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-    vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = vertShaderModule;
-    vertShaderStageInfo.pName = "main";
-    
-    VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-    fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStageInfo.module = fragShaderModule;
-    fragShaderStageInfo.pName = "main";
-    
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
-    
-    VkVertexInputBindingDescription bindingDescription{};
-    bindingDescription.binding = 0;
-    bindingDescription.stride = 3 * sizeof(float);
-    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    
-    VkVertexInputAttributeDescription attributeDescription{};
-    attributeDescription.binding = 0;
-    attributeDescription.location = 0;
-    attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-    attributeDescription.offset = 0;
-    
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-    vertexInputInfo.vertexAttributeDescriptionCount = 1;
-    vertexInputInfo.pVertexAttributeDescriptions = &attributeDescription;
-    
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    inputAssembly.primitiveRestartEnable = VK_FALSE;
-    
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = (float)swapchainExtent.width;
-    viewport.height = (float)swapchainExtent.height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    
-    VkRect2D scissor{};
-    scissor.offset = {0, 0};
-    scissor.extent = swapchainExtent;
-    
-    VkPipelineViewportStateCreateInfo viewportState{};
-    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
-    viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
-    
-    VkPipelineRasterizationStateCreateInfo rasterizer{};
-    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    rasterizer.depthClampEnable = VK_FALSE;
-    rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-    rasterizer.depthBiasEnable = VK_FALSE;
-    
-    VkPipelineMultisampleStateCreateInfo multisampling{};
-    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    
-    VkPipelineDepthStencilStateCreateInfo depthStencil{};
-    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencil.depthTestEnable = VK_TRUE;
-    depthStencil.depthWriteEnable = VK_TRUE;
-    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-    depthStencil.depthBoundsTestEnable = VK_FALSE;
-    depthStencil.stencilTestEnable = VK_FALSE;
-    
-    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | 
-                                          VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_FALSE;
-    
-    VkPipelineColorBlendStateCreateInfo colorBlending{};
-    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-    colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
-    
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-    
-    if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
-        vkDestroyShaderModule(device, vertShaderModule, nullptr);
-        vkDestroyShaderModule(device, fragShaderModule, nullptr);
-        return false;
-    }
-    
-    VkGraphicsPipelineCreateInfo pipelineInfo{};
-    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = shaderStages;
-    pipelineInfo.pVertexInputState = &vertexInputInfo;
-    pipelineInfo.pInputAssemblyState = &inputAssembly;
-    pipelineInfo.pViewportState = &viewportState;
-    pipelineInfo.pRasterizationState = &rasterizer;
-    pipelineInfo.pMultisampleState = &multisampling;
-    pipelineInfo.pDepthStencilState = &depthStencil;
-    pipelineInfo.pColorBlendState = &colorBlending;
-    pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = renderPass;
-    pipelineInfo.subpass = 0;
-    
-    VkResult result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline);
-    
-    vkDestroyShaderModule(device, vertShaderModule, nullptr);
-    vkDestroyShaderModule(device, fragShaderModule, nullptr);
-    
-    return result == VK_SUCCESS;
 }
 
 bool VulkanRendererBackend::createFramebuffers() {
@@ -612,10 +462,70 @@ bool VulkanRendererBackend::createUniformBuffer() {
     return true;
 }
 
+bool VulkanRendererBackend::createMaterialBuffer() {
+    VkDeviceSize bufferSize = sizeof(float) * 4;
+    
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = bufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    
+    if (vkCreateBuffer(device, &bufferInfo, nullptr, &materialBuffer) != VK_SUCCESS) {
+        return false;
+    }
+    
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device, materialBuffer, &memRequirements);
+    
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, 
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &materialBufferMemory) != VK_SUCCESS) {
+        return false;
+    }
+    
+    vkBindBufferMemory(device, materialBuffer, materialBufferMemory, 0);
+    return true;
+}
+
+bool VulkanRendererBackend::createLightDataBuffer() {
+    VkDeviceSize bufferSize = sizeof(float) * 3;
+    
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = bufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    
+    if (vkCreateBuffer(device, &bufferInfo, nullptr, &lightDataBuffer) != VK_SUCCESS) {
+        return false;
+    }
+    
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device, lightDataBuffer, &memRequirements);
+    
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, 
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &lightDataBufferMemory) != VK_SUCCESS) {
+        return false;
+    }
+    
+    vkBindBufferMemory(device, lightDataBuffer, lightDataBufferMemory, 0);
+    return true;
+}
+
 bool VulkanRendererBackend::createDescriptorPool() {
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = 1;
+    poolSize.descriptorCount = 3;
     
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -638,21 +548,45 @@ bool VulkanRendererBackend::createDescriptorPool() {
         return false;
     }
     
-    VkDescriptorBufferInfo bufferInfo{};
-    bufferInfo.buffer = uniformBuffer;
-    bufferInfo.offset = 0;
-    bufferInfo.range = 4 * sizeof(glm::mat4);
+    VkDescriptorBufferInfo bufferInfos[3] = {};
+    bufferInfos[0].buffer = uniformBuffer;
+    bufferInfos[0].offset = 0;
+    bufferInfos[0].range = 4 * sizeof(glm::mat4);
     
-    VkWriteDescriptorSet descriptorWrite{};
-    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrite.dstSet = descriptorSets[0];
-    descriptorWrite.dstBinding = 0;
-    descriptorWrite.dstArrayElement = 0;
-    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pBufferInfo = &bufferInfo;
+    bufferInfos[1].buffer = materialBuffer;
+    bufferInfos[1].offset = 0;
+    bufferInfos[1].range = sizeof(float) * 4;
     
-    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+    bufferInfos[2].buffer = lightDataBuffer;
+    bufferInfos[2].offset = 0;
+    bufferInfos[2].range = sizeof(float) * 3;
+    
+    VkWriteDescriptorSet descriptorWrites[3] = {};
+    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[0].dstSet = descriptorSets[0];
+    descriptorWrites[0].dstBinding = 0;
+    descriptorWrites[0].dstArrayElement = 0;
+    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrites[0].descriptorCount = 1;
+    descriptorWrites[0].pBufferInfo = &bufferInfos[0];
+    
+    descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[1].dstSet = descriptorSets[0];
+    descriptorWrites[1].dstBinding = 1;
+    descriptorWrites[1].dstArrayElement = 0;
+    descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrites[1].descriptorCount = 1;
+    descriptorWrites[1].pBufferInfo = &bufferInfos[1];
+    
+    descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[2].dstSet = descriptorSets[0];
+    descriptorWrites[2].dstBinding = 2;
+    descriptorWrites[2].dstArrayElement = 0;
+    descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrites[2].descriptorCount = 1;
+    descriptorWrites[2].pBufferInfo = &bufferInfos[2];
+    
+    vkUpdateDescriptorSets(device, 3, descriptorWrites, 0, nullptr);
     
     return true;
 }
@@ -730,20 +664,31 @@ void VulkanRendererBackend::clear() {
     renderPassInfo.pClearValues = clearValues.data();
     
     vkCmdBeginRenderPass(commandBuffers[currentImageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    vkCmdBindPipeline(commandBuffers[currentImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-    vkCmdBindDescriptorSets(commandBuffers[currentImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, 
-                           pipelineLayout, 0, 1, &descriptorSets[0], 0, nullptr);
 }
 
 void VulkanRendererBackend::draw(const Mesh& mesh) {
-    VkBuffer vertexBuffers[] = {static_cast<VkBuffer>(mesh.getHandle())};
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(commandBuffers[currentImageIndex], 0, 1, vertexBuffers, offsets);
+    auto* vkMeshBuffer = static_cast<VulkanMeshBuffer*>(mesh.getBuffer());
+    VkBuffer vertexBuffers[] = {vkMeshBuffer->getVertexBuffer(), vkMeshBuffer->getNormalBuffer()};
+    VkDeviceSize offsets[] = {0, 0};
+    vkCmdBindVertexBuffers(commandBuffers[currentImageIndex], 0, 2, vertexBuffers, offsets);
     vkCmdDraw(commandBuffers[currentImageIndex], mesh.getVertices().size() / 3, 1, 0, 0);
 }
 
 void VulkanRendererBackend::setUniforms(void* shaderProgram) {
     if (!mainCamera) return;
+    
+    // Bind pipeline do material atual
+    auto* program = static_cast<ShaderProgram*>(shaderProgram);
+    if (program && program->isValid()) {
+        VkPipeline pipeline = static_cast<VkPipeline>(program->getHandle());
+        vkCmdBindPipeline(commandBuffers[currentImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+        
+        // Bind descriptor sets usando o pipeline layout do material
+        auto* vkProgram = static_cast<VulkanShaderProgram*>(program);
+        VkPipelineLayout layout = vkProgram->getPipelineLayout();
+        vkCmdBindDescriptorSets(commandBuffers[currentImageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                               layout, 0, 1, &descriptorSets[0], 0, nullptr);
+    }
     
     glm::mat4 model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(1.0f, 0.0f, 1.0f));
     model = glm::rotate(model, SDL_GetTicks() / 1000.0f, glm::vec3(0.5f, 1.0f, 0.0f));
@@ -761,6 +706,8 @@ void VulkanRendererBackend::setUniforms(void* shaderProgram) {
         mainCamera->getNearDistance(), 
         mainCamera->getFarDistance()
     );
+    // fix temporario pra deixar eixo y igual opengl
+    projection[1][1] *= -1;
     
     struct UniformBufferObject {
         glm::mat4 model;

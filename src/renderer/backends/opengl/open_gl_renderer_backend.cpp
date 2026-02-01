@@ -1,14 +1,14 @@
 #define CLASS_NAME "OpenGLRendererBackend"
+#include "../../../log_macros.hpp"
+
 #include "open_gl_renderer_backend.hpp"
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "color.hpp"
-#include "graphics_api.hpp"
-#include "stb_image.h"
-#include "log_macros.hpp"
+#include "../../../color.hpp"
+#include "../../../stb_image.h"
 
 GraphicsAPI OpenGLRendererBackend::getGraphicsAPI() const {
     return GraphicsAPI::OPENGL;
