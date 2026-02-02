@@ -1,10 +1,13 @@
 #include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
+#include "scene.hpp"
 #include "stb_image_header.hpp"
 
 #include "game_object_manager.hpp"
 #include "scene_loader.hpp"
-#include "window_manager.hpp"
+#include "window/window_desc.hpp"
+#include "window/window_manager.hpp"
 #include "logger.hpp"
+#include "renderer/renderer_factory.hpp"
 
 #ifndef PLATFORM_WEBGL
 #include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
@@ -22,31 +25,28 @@ GraphicsAPI graphicsAPI = GraphicsAPI::WEBGL;
 GraphicsAPI graphicsAPI = GraphicsAPI::DIRECTX12;
 #endif
 
+Scene scene;
 GameObjectManager gameObjects;
 std::unique_ptr<WindowManager> windowMan;
-Renderer* windowRenderer = nullptr;
 RendererBackend* rendererBackend = nullptr;
-SDL_Window* currentWindow = nullptr;
-std::unique_ptr<Camera> mainCameraOwner;
+WindowDesc winDesc;
 
 void init() {
-    windowMan = std::make_unique<WindowManager>(graphicsAPI);
-    windowRenderer = windowMan->getRenderer();
-    rendererBackend = windowRenderer->getRendererBackend();
-    currentWindow = windowMan->getWindow();
+    
+    winDesc.title = "Engine";
+    winDesc.width = 800;
+    winDesc.height = 600;
+    
+    windowMan = std::make_unique<WindowManager>();
+    windowMan->setGraphicsApi(graphicsAPI);
+    windowMan->init(winDesc);
+
+    rendererBackend = windowMan->getRenderer()->getRendererBackend();
 
     std::string sceneFilePath = "scene.scnb";
-
-    mainCameraOwner = SceneLoader::loadCamera(sceneFilePath, *rendererBackend);
-    rendererBackend->setCamera(mainCameraOwner.get());
-
-    auto lights = SceneLoader::loadLights(sceneFilePath);
-    rendererBackend->setLights(lights);
-
-    auto objects = SceneLoader::loadMeshes(sceneFilePath, graphicsAPI, rendererBackend);
-    for (auto& obj : objects) {
-        gameObjects.add(obj.release());
-    }
+    scene.setCamera(SceneLoader::loadCamera(sceneFilePath, *rendererBackend));
+    scene.setLights(SceneLoader::loadLights(sceneFilePath));
+    scene.setGameObjects(SceneLoader::loadMeshes(sceneFilePath, graphicsAPI, rendererBackend));
 }
 
 #ifdef PLATFORM_WEBGL
@@ -64,9 +64,8 @@ void main_loop() {
         }
     }
 
-    windowRenderer->clearScreen();
-    windowRenderer->render(gameObjects.get());
-    SDL_GL_SwapWindow(currentWindow);
+    windowMan->getRenderer()->render(scene);
+    SDL_GL_SwapWindow(windowMan->getWindow());
 }
 #else
 void main_loop() {
@@ -82,10 +81,8 @@ void main_loop() {
                 running = false;
             }
         }
-
-        windowRenderer->clearScreen();
-
-        windowRenderer->render(gameObjects.get());
+        
+        windowMan->getRenderer()->render(scene);
 
         if (graphicsAPI == GraphicsAPI::VULKAN) {
             auto* vkBackend = dynamic_cast<VulkanRendererBackend*>(rendererBackend);
@@ -94,7 +91,7 @@ void main_loop() {
             auto* d3d12Backend = dynamic_cast<D3D12RendererBackend*>(rendererBackend);
             if (d3d12Backend) d3d12Backend->present();
         } else {
-            SDL_GL_SwapWindow(currentWindow);
+            SDL_GL_SwapWindow(windowMan->getWindow());
         }
     }
 

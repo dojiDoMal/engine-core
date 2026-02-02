@@ -1,3 +1,4 @@
+#include <SDL_video.h>
 #define CLASS_NAME "VulkanRendererBackend"
 #include "../../../log_macros.hpp"
 
@@ -62,6 +63,14 @@ VulkanRendererBackend::~VulkanRendererBackend() {
     if (surface) vkDestroySurfaceKHR(instance, surface, nullptr);
     if (instance) vkDestroyInstance(instance, nullptr);
 }
+
+unsigned int VulkanRendererBackend::getRequiredWindowFlags() const {
+    return SDL_WINDOW_VULKAN;
+};
+
+bool VulkanRendererBackend::init(SDL_Window* window) {
+    return true;
+};
 
 bool VulkanRendererBackend::initWindowContext() {
     printf("[Vulkan] initWindowContext - creating instance\n");
@@ -647,7 +656,7 @@ void VulkanRendererBackend::onCameraSet() {
     // Atualizar clear color se necessário
 }
 
-void VulkanRendererBackend::clear() {
+void VulkanRendererBackend::clear(Camera* camera) {
     vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
     vkResetFences(device, 1, &inFlightFence);
     

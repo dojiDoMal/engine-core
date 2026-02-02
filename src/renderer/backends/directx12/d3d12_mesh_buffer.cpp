@@ -1,6 +1,6 @@
 #define CLASS_NAME "D3D12MeshBuffer"
 #include "d3d12_mesh_buffer.hpp"
-#include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
+#include "d3d12_renderer_backend.hpp"
 #include "log_macros.hpp"
 
 D3D12MeshBuffer::~D3D12MeshBuffer() {

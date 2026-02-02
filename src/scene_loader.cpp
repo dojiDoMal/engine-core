@@ -56,13 +56,13 @@ std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, Grap
     return mesh;
 }
 
-std::unique_ptr<Camera> SceneLoader::loadCamera(const std::string& filepath,
+Camera* SceneLoader::loadCamera(const std::string& filepath,
                                                 RendererBackend& rendererBackend) {
     std::ifstream file(filepath, std::ios::binary);
     CompiledScene scene;
     file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
 
-    auto camera = std::make_unique<Camera>();
+    auto camera = new Camera();
     auto& cam = scene.camera;
 
     camera->setBackgroundColor({cam.background_color[0], cam.background_color[1],
@@ -101,13 +101,12 @@ std::unique_ptr<Camera> SceneLoader::loadCamera(const std::string& filepath,
     return camera;
 }
 
-std::vector<std::unique_ptr<GameObject>> SceneLoader::loadMeshes(const std::string& filepath, GraphicsAPI api, RendererBackend* backend) {
+std::vector<GameObject*>* SceneLoader::loadMeshes(const std::string& filepath, GraphicsAPI api, RendererBackend* backend) {
     std::ifstream file(filepath, std::ios::binary);
     CompiledScene scene;
     file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
 
-    std::vector<std::unique_ptr<GameObject>> objects;
-
+    auto objects = new std::vector<GameObject*>();
     for (uint32_t i = 0; i < scene.meshCount; i++) {
         auto& meshData = scene.meshes[i];
 
@@ -137,27 +136,28 @@ std::vector<std::unique_ptr<GameObject>> SceneLoader::loadMeshes(const std::stri
         auto meshRenderer = std::make_unique<MeshRenderer>();
         meshRenderer->setMaterial(std::move(material));
 
-        auto gameObject = std::make_unique<GameObject>();
+        auto gameObject = new GameObject();
         gameObject->setMesh(std::move(mesh));
         gameObject->setMeshRenderer(std::move(meshRenderer));
 
-        objects.push_back(std::move(gameObject));
+        objects->push_back(gameObject);
     }
 
     return objects;
 }
 
-std::vector<Light> SceneLoader::loadLights(const std::string& filepath) {
+std::vector<Light>* SceneLoader::loadLights(const std::string& filepath) {
     std::ifstream file(filepath, std::ios::binary);
     CompiledScene scene;
     file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
 
-    std::vector<Light> lights;
+    auto lights = new std::vector<Light>();
     for (uint32_t i = 0; i < scene.lightCount; i++) {
         Light light;
         light.type = static_cast<LightType>(scene.lights[i].type);
         light.direction = scene.lights[i].direction;
-        lights.push_back(light);
+        lights->push_back(light);
     }
+
     return lights;
 }

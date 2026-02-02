@@ -41,7 +41,8 @@ public:
     ~D3D12RendererBackend();
     bool init() override;
     bool initWindowContext() override;
-    void clear() override;
+    void bindCamera(Camera* camera) override;
+    void clear(Camera* camera) override;
     void draw(const Mesh&) override;
     void setUniforms(void* shaderProgram) override;
     void onCameraSet() override;
@@ -54,6 +55,8 @@ public:
     ID3D12GraphicsCommandList* getCommandList() const { return commandList; }
     void updateConstantBuffer(int binding, const void* data, size_t size);
     void setHwnd(void* hwnd) { this->hwnd = hwnd; }
+    unsigned int getRequiredWindowFlags() const override;
+    bool init(SDL_Window* window) override;
     
 private:
     void* hwnd = nullptr;

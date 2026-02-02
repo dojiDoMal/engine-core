@@ -21,9 +21,9 @@ public:
     Camera() = default;
     ~Camera() = default;
 
-    Vector3 &getPosition() { return position; }
+    const Vector3& getPosition() const { return position; }
     void setPosition(const Vector3 &position) { this->position = position; }
-    ColorRGBA &getBackgroundColor() { return backgroundColor; }
+    ColorRGBA& getBackgroundColor() { return backgroundColor; }
     void setBackgroundColor(const ColorRGBA &color) {
         this->backgroundColor = color;
     }

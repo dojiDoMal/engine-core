@@ -71,7 +71,8 @@ public:
     ~VulkanRendererBackend();
     bool init() override;
     bool initWindowContext() override;
-    void clear() override;
+    void bindCamera(Camera* camera) override {return;};
+    void clear(Camera* camera) override;
     void draw(const Mesh&) override;
     void setUniforms(void* shaderProgram) override;
     void onCameraSet() override;
@@ -91,6 +92,8 @@ public:
     VkDescriptorSetLayout getDescriptorSetLayout() const { return descriptorSetLayout; }
     void setSurface(VkSurfaceKHR surf) { surface = surf; }
     void setWindow(SDL_Window* win) { window = win; }
+    unsigned int getRequiredWindowFlags() const override;
+    bool init(SDL_Window* window) override;
 };
 
 #endif // VULKAN_RENDERER_BACKEND_HPP

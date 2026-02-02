@@ -16,10 +16,10 @@ private:
   static std::unique_ptr<Mesh> loadObjMesh(const std::string& filepath, GraphicsAPI api);
 
 public:
-  static std::unique_ptr<Camera> loadCamera(const std::string& filepath,
+  static Camera* loadCamera(const std::string& filepath,
                                             RendererBackend& rendererBackend);
-  static std::vector<std::unique_ptr<GameObject>> loadMeshes(const std::string& filepath, GraphicsAPI api, RendererBackend* backend);
-  static std::vector<Light> loadLights(const std::string& filepath);
+  static std::vector<GameObject*>* loadMeshes(const std::string& filepath, GraphicsAPI api, RendererBackend* backend);
+  static std::vector<Light>* loadLights(const std::string& filepath);
 
 };
 

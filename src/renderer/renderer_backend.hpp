@@ -5,6 +5,7 @@
 #include "../mesh.hpp"
 #include "../camera.hpp"
 #include "../light.hpp"
+#include <SDL_video.h>
 #include <vector>
 
 class RendererBackend{
@@ -17,7 +18,8 @@ public:
 
     virtual bool init() = 0;
     virtual bool initWindowContext() = 0;
-    virtual void clear() = 0;
+    virtual void bindCamera(Camera* camera) = 0;
+    virtual void clear(Camera* camera) = 0;
     virtual void draw(const Mesh&) = 0;
     virtual unsigned int createCubemapTexture(const std::vector<std::string>& faces) = 0;
     virtual GraphicsAPI getGraphicsAPI() const = 0;
@@ -25,10 +27,13 @@ public:
     virtual void setUniforms(void* shaderProgram) = 0;
     virtual void renderSkybox(const Mesh& mesh, unsigned int shaderProgram, unsigned int textureID) = 0;
     
-    Camera* getCamera(){ return this->mainCamera; }
+    virtual unsigned int getRequiredWindowFlags() const = 0;
+    virtual bool init(SDL_Window* window) = 0;
+    
+    Camera* getCamera(){ return mainCamera; }
 
     void setCamera(Camera* camera) {
-        this->mainCamera = camera;
+        mainCamera = camera;
         onCameraSet();
     }
 

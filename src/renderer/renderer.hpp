@@ -3,7 +3,9 @@
 
 #include "../game_object.hpp"
 #include "../mesh.hpp"
+#include "graphics_api.hpp"
 #include "renderer_backend.hpp"
+#include "scene.hpp"
 
 class Material;
 
@@ -12,14 +14,16 @@ private:
     RendererBackend* backend = nullptr;
 
 public:
+    ~Renderer();
     void setRendererBackend(RendererBackend* backend);
     RendererBackend* getRendererBackend();
-    bool initContext();
-    bool init();
+    bool initBackend(const GraphicsAPI& graphicsApi);
+    bool initWindow(SDL_Window* win);
     void preRender();
-    void render(const std::vector<GameObject*>& objects);
+    void render(const std::vector<GameObject*>* objects);
     void renderMesh(const Mesh& mesh);
     void renderGameObject(GameObject& gameObject);
+    void render(const Scene& scene);
     void clearScreen();
 };
 

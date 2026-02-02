@@ -17,7 +17,8 @@ public:
     ~OpenGLRendererBackend();
     bool init() override;
     bool initWindowContext() override;
-    void clear() override;  
+    void bindCamera(Camera* camera) override {return;};
+    void clear(Camera* camera) override;  
     void draw(const Mesh&) override;
     void setUniforms(void* shaderProgram) override;
     void onCameraSet() override;
@@ -27,6 +28,9 @@ public:
     GraphicsAPI getGraphicsAPI() const override;
     void deleteCubemapTexture(unsigned int textureID);
     void renderSkybox(const Mesh& mesh, unsigned int shaderProgram, unsigned int textureID) override;
+
+    unsigned int getRequiredWindowFlags() const override;
+    bool init(SDL_Window* window) override;
 };
 
 #endif // OPENGLRENDERERBACKEND_HPP

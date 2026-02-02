@@ -1,3 +1,4 @@
+#include <SDL_video.h>
 #define CLASS_NAME "OpenGLRendererBackend"
 #include "../../../log_macros.hpp"
 
@@ -18,6 +19,14 @@ OpenGLRendererBackend::~OpenGLRendererBackend() {
     if (matricesUBO) glDeleteBuffers(1,&matricesUBO);
     if (lightDataUBO) glDeleteBuffers(1, &lightDataUBO);
 }
+
+unsigned int OpenGLRendererBackend::getRequiredWindowFlags() const {
+    return SDL_WINDOW_OPENGL;
+};
+
+bool OpenGLRendererBackend::init(SDL_Window* window) {
+    return true;
+};
 
 void OpenGLRendererBackend::onCameraSet() {
     if (mainCamera) {
@@ -49,7 +58,7 @@ bool OpenGLRendererBackend::init()
     return true;
 }
 
-void OpenGLRendererBackend::clear()
+void OpenGLRendererBackend::clear(Camera* camera)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
