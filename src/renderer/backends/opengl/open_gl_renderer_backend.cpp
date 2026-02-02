@@ -78,7 +78,7 @@ void OpenGLRendererBackend::draw(const Mesh& mesh)
     glBindVertexArray(0);
 }
 
-void OpenGLRendererBackend::setUniforms(void* shaderProgram) {
+void OpenGLRendererBackend::setUniforms(ShaderProgram* shaderProgram) {
 
     if (!mainCamera) {
         LOG_ERROR("mainCamera is null");

@@ -2,9 +2,11 @@
 #define D3D12_RENDERER_BACKEND_HPP
 
 #include "../../renderer_backend.hpp"
+#include "game_object.hpp"
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <vector>
+#include <unordered_map>
 
 class D3D12RendererBackend : public RendererBackend {
 private:
@@ -25,6 +27,7 @@ private:
     
     ID3D12Resource* constantBuffers[3] = {};
     void* constantBufferData[3] = {};
+    std::unordered_map<std::string, int> uniformBindings;
     
     bool createDevice();
     bool createCommandQueue();
@@ -42,13 +45,16 @@ public:
     bool init() override;
     bool initWindowContext() override;
     void bindCamera(Camera* camera) override;
+    void applyMaterial(Material* material) override;
+    void renderGameObjects(std::vector<GameObject*>* gameObjects, std::vector<Light>* lights) override;
     void clear(Camera* camera) override;
     void draw(const Mesh&) override;
-    void setUniforms(void* shaderProgram) override;
+    void setUniforms(ShaderProgram* shaderProgram) override;
     void onCameraSet() override;
     unsigned int createCubemapTexture(const std::vector<std::string>& faces) override;
     GraphicsAPI getGraphicsAPI() const override;
     void renderSkybox(const Mesh& mesh, unsigned int shaderProgram, unsigned int textureID) override;
+    void setBufferDataImpl(const std::string& name, const void* data, size_t size) override;
     void present();
     
     ID3D12Device* getDevice() const { return device; }

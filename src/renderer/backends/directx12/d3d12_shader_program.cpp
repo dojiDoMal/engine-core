@@ -1,5 +1,9 @@
+#define CLASS_NAME "D3D12ShaderProgram"
+#include "log_macros.hpp"
+
 #include "d3d12_shader_program.hpp"
 #include "d3d12_renderer_backend.hpp"
+#include "log_macros.hpp"
 #include "shader_asset.hpp"
 #include <vector>
 
@@ -38,6 +42,10 @@ bool D3D12ShaderProgram::createPipeline() {
     rootParams[2].Descriptor.ShaderRegister = 2;
     rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     
+    uniformBindings["ModelViewProjection"] = 0;
+    uniformBindings["MaterialData"] = 1;
+    uniformBindings["LightData"] = 2;
+
     D3D12_ROOT_SIGNATURE_DESC rootSigDesc = {};
     rootSigDesc.NumParameters = 3;
     rootSigDesc.pParameters = rootParams;
@@ -45,8 +53,15 @@ bool D3D12ShaderProgram::createPipeline() {
     
     ID3DBlob* signature;
     ID3DBlob* error;
-    D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
-    device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+    if (FAILED(D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error))) {
+        LOG_ERROR("Failed to serialize root signature");
+        return false;
+    }
+    if (FAILED(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)))) {
+        LOG_ERROR("Failed to create root signature");
+        signature->Release();
+        return false;
+    }
     signature->Release();
     
     D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -81,14 +96,25 @@ bool D3D12ShaderProgram::createPipeline() {
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     psoDesc.SampleDesc.Count = 1;
     
-    return SUCCEEDED(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
+    HRESULT hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState));
+    if (FAILED(hr)) {
+        LOG_ERROR("Failed to create pipeline state");
+        return false;
+    }
+    return true;
 }
+
 
 void D3D12ShaderProgram::use() {
 }
 
-void D3D12ShaderProgram::setUniformBuffer(const char* name, int binding, const void* data, size_t size) {
-    backend->updateConstantBuffer(binding, data, size);
+void D3D12ShaderProgram::setUniformBuffer(const char* name, const void* data, size_t size) {
+    auto it = uniformBindings.find(name);
+    if (it != uniformBindings.end()) {
+        backend->updateConstantBuffer(it->second, data, size);
+        return;
+    }
+    LOG_WARN("Uniform " + std::string(name) + " not found!");
 }
 
 void* D3D12ShaderProgram::getHandle() const {

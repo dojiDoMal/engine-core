@@ -18,9 +18,12 @@ public:
     bool init() override;
     bool initWindowContext() override;
     void bindCamera(Camera* camera) override {return;};
+    void applyMaterial(Material* material) override {};
+    void renderGameObjects(std::vector<GameObject*>* gameObjects, std::vector<Light>* lights) override {};
+    void setBufferDataImpl(const std::string& name, const void* data, size_t size) override {};
     void clear(Camera* camera) override;  
     void draw(const Mesh&) override;
-    void setUniforms(void* shaderProgram) override;
+    void setUniforms(ShaderProgram* shaderProgram) override;
     void onCameraSet() override;
 
     // Skybox management

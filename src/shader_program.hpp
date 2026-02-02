@@ -11,7 +11,7 @@ public:
     virtual bool attachShader(const ShaderAsset& shader) = 0;
     virtual bool link() = 0;
     virtual void use() = 0;
-    virtual void setUniformBuffer(const char* name, int binding, const void* data, size_t size) = 0;
+    virtual void setUniformBuffer(const char* name, const void* data, size_t size) = 0;
     virtual void* getHandle() const = 0;
     virtual bool isValid() const = 0;
 };

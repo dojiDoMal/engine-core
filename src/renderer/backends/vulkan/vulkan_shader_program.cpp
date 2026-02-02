@@ -160,7 +160,11 @@ void VulkanShaderProgram::use() {
     // Em Vulkan, "use" é feito via vkCmdBindPipeline no command buffer
 }
 
-void VulkanShaderProgram::setUniformBuffer(const char* name, int binding, const void* data, size_t size) {
+void VulkanShaderProgram::setUniformBuffer(const char* name, const void* data, size_t size) {
+
+    //temporary fix
+    int binding = 0;
+
     if (binding == 1 && backend) {
         void* mapped;
         vkMapMemory(backend->getDevice(), backend->getMaterialBufferMemory(), 0, size, 0, &mapped);

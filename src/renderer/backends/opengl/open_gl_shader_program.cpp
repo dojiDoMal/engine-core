@@ -41,7 +41,10 @@ void OpenGLShaderProgram::use() {
     glUseProgram(programID);
 }
 
-void OpenGLShaderProgram::setUniformBuffer(const char* name, int binding, const void* data, size_t size) {
+void OpenGLShaderProgram::setUniformBuffer(const char* name, const void* data, size_t size) {
+    //temporary fix 
+    int binding = 0;
+
     GLuint location = glGetUniformBlockIndex(programID, ("type_" + std::string(name)).c_str());
     if (location != GL_INVALID_INDEX) {
         glUniformBlockBinding(programID, location, binding);

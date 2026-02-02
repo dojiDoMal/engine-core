@@ -26,7 +26,7 @@ bool Material::init() {
         return false;
     }
 
-    shaderProgram->setUniformBuffer("MaterialData", 1, &baseColor, sizeof(baseColor));
+    shaderProgram->setUniformBuffer("MaterialData", &baseColor, sizeof(baseColor));
     return true;
 }
 
@@ -45,6 +45,6 @@ void Material::use() {
 void Material::setBaseColor(const ColorRGBA color) {
     baseColor = color;
     if (shaderProgram) {
-        shaderProgram->setUniformBuffer("MaterialData", 1, &baseColor, sizeof(baseColor));
+        shaderProgram->setUniformBuffer("MaterialData", &baseColor, sizeof(baseColor));
     }
 }

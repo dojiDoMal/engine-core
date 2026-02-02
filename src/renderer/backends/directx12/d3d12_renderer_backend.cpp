@@ -9,9 +9,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
-
 GraphicsAPI D3D12RendererBackend::getGraphicsAPI() const { return GraphicsAPI::DIRECTX12; }
 
 unsigned int D3D12RendererBackend::getRequiredWindowFlags() const { return 0; }
@@ -239,8 +236,14 @@ bool D3D12RendererBackend::createConstantBuffers() {
             return false;
         constantBuffers[i]->Map(0, nullptr, &constantBufferData[i]);
     }
+    
+    uniformBindings["ModelViewProjection"] = 0;
+    uniformBindings["MaterialData"] = 1;
+    uniformBindings["LightData"] = 2;
+    
     return true;
 }
+
 
 void D3D12RendererBackend::waitForGPU() {
     commandQueue->Signal(fence, ++fenceValue);
@@ -294,13 +297,24 @@ void D3D12RendererBackend::draw(const Mesh& mesh) {
     commandList->DrawInstanced(mesh.getVertices().size() / 3, 1, 0, 0);
 }
 
-void D3D12RendererBackend::setUniforms(void* shaderProgram) {
+void D3D12RendererBackend::setUniforms(ShaderProgram* shaderProgram) {
+    if (!shaderProgram)
+        return;
+
     auto* program = static_cast<D3D12ShaderProgram*>(shaderProgram);
     if (!program || !program->isValid())
         return;
 
-    commandList->SetPipelineState(program->getPipelineState());
-    commandList->SetGraphicsRootSignature(program->getRootSignature());
+    auto pipelineState = program->getPipelineState();
+    auto rootSignature = program->getRootSignature();
+
+    if (!pipelineState || !rootSignature) {
+        LOG_ERROR("Pipeline state or root signature is null");
+        return;
+    }
+
+    commandList->SetPipelineState(pipelineState);
+    commandList->SetGraphicsRootSignature(rootSignature);
 
     for (int i = 0; i < 3; i++) {
         commandList->SetGraphicsRootConstantBufferView(i,
@@ -328,6 +342,15 @@ void D3D12RendererBackend::bindCamera(Camera* camera) {
 
     memcpy(constantBufferData[0], &matrices, sizeof(matrices));
 }
+
+void D3D12RendererBackend::setBufferDataImpl(const std::string& name, const void* data,
+                                             size_t size) {
+    auto it = uniformBindings.find(name);
+    if (it != uniformBindings.end()) {
+        updateConstantBuffer(it->second, data, size);
+    }
+}
+
 
 void D3D12RendererBackend::updateConstantBuffer(int binding, const void* data, size_t size) {
     if (binding >= 0 && binding < 3 && constantBufferData[binding]) {
@@ -357,4 +380,45 @@ void D3D12RendererBackend::present() {
     swapChain->Present(1, 0);
     waitForGPU();
     frameIndex = swapChain->GetCurrentBackBufferIndex();
+}
+
+void D3D12RendererBackend::applyMaterial(Material* material) {
+    auto program = material->getProgram();
+    if (!program || !program->isValid()) {
+        return;
+    }
+
+    setUniforms(program);
+}
+
+void D3D12RendererBackend::renderGameObjects(std::vector<GameObject*>* gameObjects,
+                                             std::vector<Light>* lights = nullptr) {
+    for (const auto go : *gameObjects) {
+        auto mesh = go->getMesh();
+        if (!mesh) {
+            LOG_INFO("Mesh is null!");
+            return;
+        }
+
+        auto meshRenderer = go->getMeshRenderer();
+        if (!meshRenderer) {
+            LOG_INFO("MeshRenderer is null!");
+            return;
+        }
+
+        auto mat = meshRenderer->getMaterial();
+        if (!mat) {
+            LOG_INFO("Material is null!");
+            return;
+        }
+
+        mat->use();
+        applyMaterial(mat);
+
+        if (lights) {
+            setBufferData("LightData", &(*lights)[0].direction);
+        }
+
+        draw(*mesh);
+    }
 }

@@ -9,7 +9,6 @@
 #include <cstdint>
 #include <cstdio>
 
-
 Renderer::~Renderer() {
     if (backend) {
         delete backend;
@@ -38,49 +37,11 @@ bool Renderer::initWindow(SDL_Window* win) {
     return false;
 }
 
-void Renderer::renderMesh(const Mesh& mesh) { this->backend->draw(mesh); }
+void Renderer::renderMesh(const Mesh& mesh) {}
 
-void Renderer::clearScreen() { return; }
+void Renderer::clearScreen() {}
 
-void Renderer::renderGameObject(GameObject& gameObject) {
-
-    auto mesh = gameObject.getMesh();
-    if (!mesh) {
-        LOG_INFO("Mesh is null!");
-        return;
-    }
-
-    auto meshRenderer = gameObject.getMeshRenderer();
-    if (!meshRenderer) {
-        LOG_INFO("MeshRenderer is null!");
-        return;
-    }
-
-    auto mat = meshRenderer->getMaterial();
-    if (!mat) {
-        LOG_INFO("Material is null!");
-        return;
-    }
-
-    mat->use();
-
-    auto program = mat->getProgram();
-    if (program && program->isValid()) {
-        auto value = reinterpret_cast<std::uintptr_t>(program->getHandle());
-        unsigned int shader = static_cast<unsigned int>(value);
-        backend->setUniforms(program);
-
-        auto& lights = backend->getLights();
-        if (!lights.empty()) {
-            program->setUniformBuffer("LightData", 2, &lights[0].direction, sizeof(float) * 3);
-        }
-    } else {
-        LOG_ERROR("Invalid shader program");
-        return;
-    }
-
-    renderMesh(*mesh);
-}
+void Renderer::renderGameObject(GameObject& gameObject) {}
 
 void Renderer::render(const Scene& scene) {
 
@@ -97,19 +58,8 @@ void Renderer::render(const Scene& scene) {
 
     backend->clear(scene.getCamera());
 
-    // Passar lights para o backend
-    auto sceneLights = scene.getLights();
-    std::vector<Light> lightsCopy;
-    for (auto light : *sceneLights) {
-        lightsCopy.push_back(light);
-    }
-    backend->setLights(lightsCopy);
-
-
-    auto gos = scene.getGameObjects();
-    for (const auto go : *gos) {
-        renderGameObject(*go);
-    }
+    backend->renderGameObjects(const_cast<std::vector<GameObject*>*>(scene.getGameObjects()),
+                               const_cast<std::vector<Light>*>(scene.getLights()));
 }
 
 void Renderer::render(const std::vector<GameObject*>* objects) {

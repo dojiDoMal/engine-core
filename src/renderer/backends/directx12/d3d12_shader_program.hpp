@@ -5,6 +5,8 @@
 #include "shader_type.hpp"
 #include <d3d12.h>
 #include <vector>
+#include <unordered_map>
+#include <string>
 
 class D3D12RendererBackend;
 
@@ -15,6 +17,7 @@ private:
     std::vector<ShaderType> shaderTypes;
     ID3D12PipelineState* pipelineState = nullptr;
     ID3D12RootSignature* rootSignature = nullptr;
+    std::unordered_map<std::string, int> uniformBindings;
     
     bool createPipeline();
     
@@ -25,7 +28,7 @@ public:
     bool attachShader(const ShaderAsset& shader) override;
     bool link() override;
     void use() override;
-    void setUniformBuffer(const char* name, int binding, const void* data, size_t size) override;
+    void setUniformBuffer(const char* name, const void* data, size_t size) override;
     void* getHandle() const override;
     bool isValid() const override;
     

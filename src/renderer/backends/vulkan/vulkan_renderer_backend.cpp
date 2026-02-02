@@ -698,7 +698,7 @@ void VulkanRendererBackend::draw(const Mesh& mesh) {
     vkCmdDraw(commandBuffers[currentImageIndex], mesh.getVertices().size() / 3, 1, 0, 0);
 }
 
-void VulkanRendererBackend::setUniforms(void* shaderProgram) {
+void VulkanRendererBackend::setUniforms(ShaderProgram* shaderProgram) {
     if (!mainCamera) return;
     
     // Bind pipeline do material atual
