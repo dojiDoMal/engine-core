@@ -25,7 +25,7 @@ static std::string formatDateTime(const char* format) {
 }
 
 void Logger::init(const char* baseName) {
-    std::string filename = std::string(baseName) + "_" + formatDateTime("%Y-%m-%d_%H-%M-%S") + ".log";
+    std::string filename = "logs/" + std::string( baseName) + "_" + formatDateTime("%Y-%m-%d_%H-%M-%S") + ".log";
     g_logFile.open(filename, std::ios::out | std::ios::app);
 }
 

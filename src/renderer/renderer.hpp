@@ -21,10 +21,7 @@ public:
     bool initWindow(SDL_Window* win);
     void preRender();
     void render(const std::vector<GameObject*>* objects);
-    void renderMesh(const Mesh& mesh);
-    void renderGameObject(GameObject& gameObject);
     void render(const Scene& scene);
-    void clearScreen();
 };
 
 #endif // RENDERER_HPP

@@ -37,12 +37,6 @@ bool Renderer::initWindow(SDL_Window* win) {
     return false;
 }
 
-void Renderer::renderMesh(const Mesh& mesh) {}
-
-void Renderer::clearScreen() {}
-
-void Renderer::renderGameObject(GameObject& gameObject) {}
-
 void Renderer::render(const Scene& scene) {
 
     if (!backend) {
@@ -62,10 +56,8 @@ void Renderer::render(const Scene& scene) {
                                const_cast<std::vector<Light>*>(scene.getLights()));
 }
 
+//deprecated
 void Renderer::render(const std::vector<GameObject*>* objects) {
-    for (const auto go : *objects) {
-        renderGameObject(*go);
-    }
 
     if (backend && backend->getCamera()) {
         auto skybox = backend->getCamera()->getSkybox();
