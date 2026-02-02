@@ -5,6 +5,13 @@
 #include "color.hpp"
 #include "vector3.hpp"
 
+
+struct LightData {
+    uint8_t type;  // 0=DIRECTIONAL, 1=POINT, 2=SPOT
+    Vector3 direction;
+    //float position[3];
+};
+
 struct MaterialData {
   char vertexShaderPath[256];
   char fragmentShaderPath[256];
@@ -13,17 +20,6 @@ struct MaterialData {
 
 struct SkyboxData {
   char cubeMapTextures[6][256];
-  MaterialData material;
-};
-
-struct LightData {
-    uint8_t type;  // 0=DIRECTIONAL, 1=POINT, 2=SPOT
-    Vector3 direction;
-    //float position[3];
-};
-
-struct MeshData {
-  char objPath[256];
   MaterialData material;
 };
 
@@ -36,11 +32,31 @@ struct SceneCameraData {
   SkyboxData skybox;
 };
 
+enum class ComponentType : uint8_t {
+  MESH_RENDERER = 0,
+  // Futuros: AUDIO_SOURCE, COLLIDER, RIGIDBODY, etc.
+};
+
+struct ComponentData {
+  ComponentType type;
+  union {
+    struct {
+      char objPath[256];
+      MaterialData material;
+    } meshRenderer;
+  };
+};
+
+struct GameObjectData {
+  uint8_t componentCount;
+  ComponentData components[8];
+};
+
 struct CompiledScene {
   uint32_t magic = 0x53434E45;
   SceneCameraData camera;
-  uint32_t meshCount;
-  MeshData meshes[32];
+  uint32_t gameObjectCount;
+  GameObjectData gameObjects[32];
   uint32_t lightCount;
   LightData lights[32];
 };

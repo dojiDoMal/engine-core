@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
         std::snprintf(scene.camera.skybox.material.vertexShaderPath,
                       sizeof(scene.camera.skybox.material.vertexShaderPath), "%s",
                       vertPath.c_str());
-                      
+
         std::snprintf(scene.camera.skybox.material.fragmentShaderPath,
                       sizeof(scene.camera.skybox.material.fragmentShaderPath), "%s",
                       fragPath.c_str());
@@ -71,28 +71,51 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    scene.meshCount = 0;
-    if (j.contains("meshes")) {
-        auto& meshes = j["meshes"];
-        scene.meshCount = meshes.size();
-        for (size_t i = 0; i < meshes.size() && i < 32; i++) {
-            std::string objPath = meshes[i]["objPath"];
-            std::string vertPath = meshes[i]["material"]["vertexShaderPath"];
-            std::string fragPath = meshes[i]["material"]["fragmentShaderPath"];
-            std::array<float, 4> color = meshes[i]["material"]["color"];
+    scene.gameObjectCount = 0;
+    if (j.contains("gameObjects")) {
+        auto& gameObjects = j["gameObjects"];
+        scene.gameObjectCount = gameObjects.size();
+        for (size_t i = 0; i < gameObjects.size() && i < 32; i++) {
+            auto& go = gameObjects[i];
+            auto& goData = scene.gameObjects[i];
 
-            std::snprintf(scene.meshes[i].objPath, sizeof(scene.meshes[i].objPath), "%s",
-                          objPath.c_str());
+            goData.componentCount = 0;
 
-            std::snprintf(scene.meshes[i].material.vertexShaderPath,
-                          sizeof(scene.meshes[i].material.vertexShaderPath), "%s",
-                          vertPath.c_str());
+            if (go.contains("components")) {
+                auto& components = go["components"];
+                goData.componentCount = components.size();
 
-            std::snprintf(scene.meshes[i].material.fragmentShaderPath,
-                          sizeof(scene.meshes[i].material.fragmentShaderPath), "%s",
-                          fragPath.c_str());
+                for (size_t j = 0; j < components.size() && j < 8; j++) {
+                    auto& comp = components[j];
+                    std::string type = comp["type"];
 
-            scene.meshes[i].material.color = {color[0], color[1], color[2], color[3]};
+                    if (type == "MESH_RENDERER") {
+                        goData.components[j].type = ComponentType::MESH_RENDERER;
+
+                        std::string objPath = comp["objPath"];
+                        std::string vertPath = comp["material"]["vertexShaderPath"];
+                        std::string fragPath = comp["material"]["fragmentShaderPath"];
+                        std::array<float, 4> color = comp["material"]["color"];
+
+                        std::snprintf(goData.components[j].meshRenderer.objPath,
+                                      sizeof(goData.components[j].meshRenderer.objPath), "%s",
+                                      objPath.c_str());
+
+                        std::snprintf(
+                            goData.components[j].meshRenderer.material.vertexShaderPath,
+                            sizeof(goData.components[j].meshRenderer.material.vertexShaderPath),
+                            "%s", vertPath.c_str());
+
+                        std::snprintf(
+                            goData.components[j].meshRenderer.material.fragmentShaderPath,
+                            sizeof(goData.components[j].meshRenderer.material.fragmentShaderPath),
+                            "%s", fragPath.c_str());
+
+                        goData.components[j].meshRenderer.material.color = {color[0], color[1],
+                                                                            color[2], color[3]};
+                    }
+                }
+            }
         }
     }
 

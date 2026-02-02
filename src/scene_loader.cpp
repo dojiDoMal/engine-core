@@ -107,38 +107,46 @@ std::vector<GameObject*>* SceneLoader::loadMeshes(const std::string& filepath, G
     file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
 
     auto objects = new std::vector<GameObject*>();
-    for (uint32_t i = 0; i < scene.meshCount; i++) {
-        auto& meshData = scene.meshes[i];
-
-        auto mesh = loadObjMesh(meshData.objPath, api);
-        if (!mesh || !mesh->configure(backend)) {
-            LOG_ERROR("Failed to load mesh: " + meshData.objPath);
-            continue;
-        }
-
-        auto vertexShader = std::make_unique<ShaderAsset>(
-            getShaderPath(meshData.material.vertexShaderPath, api), ShaderType::VERTEX, api, backend);
-        auto fragmentShader = std::make_unique<ShaderAsset>(
-            getShaderPath(meshData.material.fragmentShaderPath, api), ShaderType::FRAGMENT, api, backend);
-
-        auto material = std::make_unique<Material>(api);
-        material->setContext(backend);
-        material->setVertexShader(std::move(vertexShader));
-        material->setFragmentShader(std::move(fragmentShader));
-        material->setBaseColor(meshData.material.color);
-        if (!material->init()) {
-            LOG_ERROR("Material init failed for mesh: " + std::string(meshData.objPath));
-            LOG_ERROR("Vertex shader: " + std::string(meshData.material.vertexShaderPath));
-            LOG_ERROR("Fragment shader: " + std::string(meshData.material.fragmentShaderPath));
-            continue;
-        }
-
-        auto meshRenderer = std::make_unique<MeshRenderer>();
-        meshRenderer->setMaterial(std::move(material));
-
+    
+    for (uint32_t i = 0; i < scene.gameObjectCount; i++) {
+        auto& goData = scene.gameObjects[i];
         auto gameObject = new GameObject();
-        gameObject->setMesh(std::move(mesh));
-        gameObject->setMeshRenderer(std::move(meshRenderer));
+
+        for (uint8_t j = 0; j < goData.componentCount; j++) {
+            auto& comp = goData.components[j];
+            
+            if (comp.type == ComponentType::MESH_RENDERER) {
+                auto& meshData = comp.meshRenderer;
+                
+                auto mesh = loadObjMesh(meshData.objPath, api);
+                if (!mesh || !mesh->configure(backend)) {
+                    LOG_ERROR("Failed to load mesh: " + std::string(meshData.objPath));
+                    continue;
+                }
+
+                auto vertexShader = std::make_unique<ShaderAsset>(
+                    getShaderPath(meshData.material.vertexShaderPath, api), ShaderType::VERTEX, api, backend);
+                auto fragmentShader = std::make_unique<ShaderAsset>(
+                    getShaderPath(meshData.material.fragmentShaderPath, api), ShaderType::FRAGMENT, api, backend);
+
+                auto material = std::make_unique<Material>(api);
+                material->setContext(backend);
+                material->setVertexShader(std::move(vertexShader));
+                material->setFragmentShader(std::move(fragmentShader));
+                material->setBaseColor(meshData.material.color);
+                
+                if (!material->init()) {
+                    LOG_ERROR("Material init failed for mesh: " + std::string(meshData.objPath));
+                    continue;
+                }
+
+                auto meshRenderer = std::make_unique<MeshRenderer>();
+                meshRenderer->setMaterial(std::move(material));
+
+                gameObject->setMesh(std::move(mesh));
+                gameObject->setMeshRenderer(std::move(meshRenderer));
+            }
+        }
 
         objects->push_back(gameObject);
     }
