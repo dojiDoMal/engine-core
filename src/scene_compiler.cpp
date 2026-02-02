@@ -97,6 +97,9 @@ int main(int argc, char* argv[]) {
                         std::string fragPath = comp["material"]["fragmentShaderPath"];
                         std::array<float, 4> color = comp["material"]["color"];
 
+                        bool shadeSmooth = comp.value("shadeSmooth", true);
+                        goData.components[j].meshRenderer.shadeSmooth = shadeSmooth;
+
                         std::snprintf(goData.components[j].meshRenderer.objPath,
                                       sizeof(goData.components[j].meshRenderer.objPath), "%s",
                                       objPath.c_str());

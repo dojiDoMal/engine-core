@@ -43,6 +43,7 @@ struct ComponentData {
     struct {
       char objPath[256];
       MaterialData material;
+      bool shadeSmooth;
     } meshRenderer;
   };
 };

@@ -46,7 +46,7 @@ void init() {
     std::string sceneFilePath = "scene.scnb";
     scene.setCamera(SceneLoader::loadCamera(sceneFilePath, *rendererBackend));
     scene.setLights(SceneLoader::loadLights(sceneFilePath));
-    scene.setGameObjects(SceneLoader::loadMeshes(sceneFilePath, graphicsAPI, rendererBackend));
+    scene.setGameObjects(SceneLoader::loadGameObjects(sceneFilePath, graphicsAPI, rendererBackend));
 }
 
 #ifdef PLATFORM_WEBGL
