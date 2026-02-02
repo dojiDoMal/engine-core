@@ -1,7 +1,7 @@
-#include <SDL_video.h>
 #define CLASS_NAME "VulkanRendererBackend"
 #include "../../../log_macros.hpp"
 
+#include <SDL_video.h>
 #include <sstream>
 #include "vulkan_renderer_backend.hpp"
 #include "vulkan_shader_program.hpp"

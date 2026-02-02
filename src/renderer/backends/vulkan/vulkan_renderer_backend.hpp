@@ -1,11 +1,11 @@
 #ifndef VULKAN_RENDERER_BACKEND_HPP
 #define VULKAN_RENDERER_BACKEND_HPP
 
-#include <SDL_video.h>
 #include <vulkan/vulkan.h>
 #include "../../renderer_backend.hpp"
 #include <vector>
 
+struct SDL_Window;
 class VulkanRendererBackend : public RendererBackend {
 private:
     VkInstance instance = VK_NULL_HANDLE;

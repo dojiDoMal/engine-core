@@ -5,8 +5,9 @@
 #include "../mesh.hpp"
 #include "../camera.hpp"
 #include "../light.hpp"
-#include <SDL_video.h>
 #include <vector>
+
+struct SDL_Window;
 
 class RendererBackend{
 protected:

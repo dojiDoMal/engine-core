@@ -1,4 +1,3 @@
-#include <SDL_video.h>
 #define CLASS_NAME "OpenGLRendererBackend"
 #include "../../../log_macros.hpp"
 
