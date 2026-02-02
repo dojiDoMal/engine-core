@@ -1,3 +1,4 @@
+#include "renderer/renderer_backend.hpp"
 #define CLASS_NAME "WindowManager"
 #include "window_manager.hpp"
 #include "log_macros.hpp"
@@ -11,6 +12,10 @@ WindowManager::~WindowManager() {
         SDL_DestroyWindow(window);
     }
     SDL_Quit();
+}
+
+void WindowManager::render(Scene& scene) {
+    renderer->render(scene);
 }
 
 bool WindowManager::init(const WindowDesc& desc) {

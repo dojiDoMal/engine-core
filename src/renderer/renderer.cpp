@@ -41,6 +41,7 @@ void Renderer::render(const Scene& scene) {
 
     if (!backend) {
         LOG_ERROR("Can not render without a renderer backend!");
+        return;
     }
 
     if (!scene.getCamera()) {
@@ -49,9 +50,7 @@ void Renderer::render(const Scene& scene) {
     }
 
     backend->bindCamera(scene.getCamera());
-
     backend->clear(scene.getCamera());
-
     backend->renderGameObjects(const_cast<std::vector<GameObject*>*>(scene.getGameObjects()),
                                const_cast<std::vector<Light>*>(scene.getLights()));
 }

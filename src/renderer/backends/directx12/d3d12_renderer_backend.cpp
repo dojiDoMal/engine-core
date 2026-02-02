@@ -316,10 +316,18 @@ void D3D12RendererBackend::setUniforms(ShaderProgram* shaderProgram) {
     commandList->SetPipelineState(pipelineState);
     commandList->SetGraphicsRootSignature(rootSignature);
 
-    for (int i = 0; i < 3; i++) {
-        commandList->SetGraphicsRootConstantBufferView(i,
-                                                       constantBuffers[i]->GetGPUVirtualAddress());
-    }
+    auto mvpAddr = program->getConstantBufferAddress("ModelViewProjection");
+    auto matAddr = program->getConstantBufferAddress("MaterialData");
+    auto lightAddr = program->getConstantBufferAddress("LightData");
+    
+    if (mvpAddr) commandList->SetGraphicsRootConstantBufferView(0, mvpAddr);
+    else commandList->SetGraphicsRootConstantBufferView(0, constantBuffers[0]->GetGPUVirtualAddress());
+    
+    if (matAddr) commandList->SetGraphicsRootConstantBufferView(1, matAddr);
+    else commandList->SetGraphicsRootConstantBufferView(1, constantBuffers[1]->GetGPUVirtualAddress());
+    
+    if (lightAddr) commandList->SetGraphicsRootConstantBufferView(2, lightAddr);
+    else commandList->SetGraphicsRootConstantBufferView(2, constantBuffers[2]->GetGPUVirtualAddress());
 }
 
 void D3D12RendererBackend::bindCamera(Camera* camera) {
@@ -415,8 +423,8 @@ void D3D12RendererBackend::renderGameObjects(std::vector<GameObject*>* gameObjec
         mat->use();
         applyMaterial(mat);
 
-        if (lights) {
-            setBufferData("LightData", &(*lights)[0].direction);
+        if (lights && !lights->empty()) {
+            mat->applyLight((*lights)[0]);
         }
 
         draw(*mesh);

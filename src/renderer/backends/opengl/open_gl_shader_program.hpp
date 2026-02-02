@@ -4,11 +4,13 @@
 #include "shader_program.hpp"
 #include <GL/glew.h>
 #include <unordered_map>
+#include <string>
 
 class OpenGLShaderProgram : public ShaderProgram {
 private:
     GLuint programID = 0;
-    std::unordered_map<int, GLuint> ubos;
+    std::unordered_map<std::string, int> uniformBindings;
+    std::unordered_map<std::string, GLuint> uniformBuffers;
 
 public:
     ~OpenGLShaderProgram() override;

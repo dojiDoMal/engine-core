@@ -3,6 +3,7 @@
 
 #include "color.hpp"
 #include "graphics_api.hpp"
+#include "light.hpp"
 #include "shader_asset.hpp"
 #include "shader_program.hpp"
 #include <memory>
@@ -24,6 +25,7 @@ public:
     void use();
     void setContext(void* context);
     void setBaseColor(const ColorRGBA color);
+    void applyLight(const Light light);
 
     void setVertexShader(std::unique_ptr<ShaderAsset> shader) {
         vertexShader = std::move(shader);

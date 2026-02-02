@@ -16,6 +16,7 @@ public:
     ~WindowManager();
 
     bool init(const WindowDesc& desc);
+    void render(Scene& scene);
     SDL_Window* getWindow() {return window;};
     Renderer* getRenderer(){return renderer;}
     void setGraphicsApi(const GraphicsAPI &api) { graphicsApi = api; }

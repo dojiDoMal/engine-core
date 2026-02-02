@@ -22,12 +22,12 @@
 GraphicsAPI graphicsAPI = GraphicsAPI::WEBGL;
 #else
 // Escolha a API aqui: GraphicsAPI::OPENGL ou GraphicsAPI::VULKAN
-GraphicsAPI graphicsAPI = GraphicsAPI::DIRECTX12;
+GraphicsAPI graphicsAPI = GraphicsAPI::OPENGL;
 #endif
 
 Scene scene;
 GameObjectManager gameObjects;
-std::unique_ptr<WindowManager> windowMan;
+std::unique_ptr<WindowManager> screenManager;
 RendererBackend* rendererBackend = nullptr;
 WindowDesc winDesc;
 
@@ -37,11 +37,11 @@ void init() {
     winDesc.width = 800;
     winDesc.height = 600;
     
-    windowMan = std::make_unique<WindowManager>();
-    windowMan->setGraphicsApi(graphicsAPI);
-    windowMan->init(winDesc);
+    screenManager = std::make_unique<WindowManager>();
+    screenManager->setGraphicsApi(graphicsAPI);
+    screenManager->init(winDesc);
 
-    rendererBackend = windowMan->getRenderer()->getRendererBackend();
+    rendererBackend = screenManager->getRenderer()->getRendererBackend();
 
     std::string sceneFilePath = "scene.scnb";
     scene.setCamera(SceneLoader::loadCamera(sceneFilePath, *rendererBackend));
@@ -64,8 +64,8 @@ void main_loop() {
         }
     }
 
-    windowMan->getRenderer()->render(scene);
-    SDL_GL_SwapWindow(windowMan->getWindow());
+    screenManager->getRenderer()->render(scene);
+    SDL_GL_SwapWindow(screenManager->getWindow());
 }
 #else
 void main_loop() {
@@ -82,7 +82,7 @@ void main_loop() {
             }
         }
         
-        windowMan->getRenderer()->render(scene);
+        screenManager->render(scene);
 
         if (graphicsAPI == GraphicsAPI::VULKAN) {
             auto* vkBackend = dynamic_cast<VulkanRendererBackend*>(rendererBackend);
@@ -91,7 +91,7 @@ void main_loop() {
             auto* d3d12Backend = dynamic_cast<D3D12RendererBackend*>(rendererBackend);
             if (d3d12Backend) d3d12Backend->present();
         } else {
-            SDL_GL_SwapWindow(windowMan->getWindow());
+            SDL_GL_SwapWindow(screenManager->getWindow());
         }
     }
 

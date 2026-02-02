@@ -12,6 +12,9 @@ struct ShaderBytecode {
 };
 
 D3D12ShaderProgram::~D3D12ShaderProgram() {
+    for (auto& pair : constantBuffers) {
+        if (pair.second) pair.second->Release();
+    }
     if (pipelineState) pipelineState->Release();
     if (rootSignature) rootSignature->Release();
 }
@@ -110,11 +113,33 @@ void D3D12ShaderProgram::use() {
 
 void D3D12ShaderProgram::setUniformBuffer(const char* name, const void* data, size_t size) {
     auto it = uniformBindings.find(name);
-    if (it != uniformBindings.end()) {
-        backend->updateConstantBuffer(it->second, data, size);
+    if (it == uniformBindings.end()) {
+        LOG_WARN("Uniform " + std::string(name) + " not found!");
         return;
     }
-    LOG_WARN("Uniform " + std::string(name) + " not found!");
+
+    ID3D12Resource*& buffer = constantBuffers[name];
+    if (buffer == nullptr) {
+        D3D12_HEAP_PROPERTIES heapProps = {};
+        heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+        
+        D3D12_RESOURCE_DESC bufferDesc = {};
+        bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        bufferDesc.Width = (size + 255) & ~255;
+        bufferDesc.Height = 1;
+        bufferDesc.DepthOrArraySize = 1;
+        bufferDesc.MipLevels = 1;
+        bufferDesc.SampleDesc.Count = 1;
+        bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        
+        backend->getDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, 
+            &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&buffer));
+    }
+    
+    void* mappedData;
+    buffer->Map(0, nullptr, &mappedData);
+    memcpy(mappedData, data, size);
+    buffer->Unmap(0, nullptr);
 }
 
 void* D3D12ShaderProgram::getHandle() const {

@@ -7,20 +7,22 @@
 #include "../../../mesh.hpp"
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 class OpenGLRendererBackend : public RendererBackend {
 private: 
     GLuint matricesUBO = 0;
     GLuint lightDataUBO = 0;
+    std::unordered_map<std::string, GLuint> uniformBindings;
 
 public:
     ~OpenGLRendererBackend();
     bool init() override;
     bool initWindowContext() override;
-    void bindCamera(Camera* camera) override {return;};
-    void applyMaterial(Material* material) override {};
-    void renderGameObjects(std::vector<GameObject*>* gameObjects, std::vector<Light>* lights) override {};
-    void setBufferDataImpl(const std::string& name, const void* data, size_t size) override {};
+    void bindCamera(Camera* camera) override;
+    void applyMaterial(Material* material) override;
+    void renderGameObjects(std::vector<GameObject*>* gameObjects, std::vector<Light>* lights) override;
+    void setBufferDataImpl(const std::string& name, const void* data, size_t size) override;
     void clear(Camera* camera) override;  
     void draw(const Mesh&) override;
     void setUniforms(ShaderProgram* shaderProgram) override;
