@@ -1,6 +1,9 @@
+#include "mesh_buffer_factory.hpp"
+#include "shader_compiler_factory.hpp"
 #define CLASS_NAME "VulkanRendererBackend"
 #include "../../../log_macros.hpp"
 
+#include "shader_program_factory.hpp"
 #include <SDL_video.h>
 #include <sstream>
 #include "vulkan_renderer_backend.hpp"
@@ -20,6 +23,20 @@
 
 GraphicsAPI VulkanRendererBackend::getGraphicsAPI() const {
     return GraphicsAPI::VULKAN;
+}
+
+std::string VulkanRendererBackend::getShaderExtension() const { return ".spv"; }
+
+std::unique_ptr<ShaderProgram> VulkanRendererBackend::createShaderProgram() {
+    return ShaderProgramFactory::create(getGraphicsAPI(), this);
+}
+
+std::unique_ptr<MeshBuffer> VulkanRendererBackend::createMeshBuffer() {
+    return MeshBufferFactory::create(getGraphicsAPI(), this);
+}
+
+std::unique_ptr<ShaderCompiler> VulkanRendererBackend::createShaderCompiler() {
+    return ShaderCompilerFactory::create(getGraphicsAPI(), this);
 }
 
 VulkanRendererBackend::~VulkanRendererBackend() {
@@ -691,7 +708,7 @@ void VulkanRendererBackend::clear(Camera* camera) {
 }
 
 void VulkanRendererBackend::draw(const Mesh& mesh) {
-    auto* vkMeshBuffer = static_cast<VulkanMeshBuffer*>(mesh.getBuffer());
+    auto* vkMeshBuffer = static_cast<VulkanMeshBuffer*>(mesh.getMeshBuffer());
     VkBuffer vertexBuffers[] = {vkMeshBuffer->getVertexBuffer(), vkMeshBuffer->getNormalBuffer()};
     VkDeviceSize offsets[] = {0, 0};
     vkCmdBindVertexBuffers(commandBuffers[currentImageIndex], 0, 2, vertexBuffers, offsets);

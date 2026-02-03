@@ -10,10 +10,9 @@ private:
     std::unique_ptr<Mesh> cubeMesh;
     std::unique_ptr<Material> skyboxMaterial;
     unsigned int textureID = 0;
-    GraphicsAPI api;
     
 public:
-    Skybox(GraphicsAPI api);
+    Skybox();
     ~Skybox() = default;
     
     bool init();

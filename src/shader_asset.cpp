@@ -1,12 +1,14 @@
 #define CLASS_NAME "ShaderAsset"
-#include "shader_asset.hpp"
-#include "shader_compiler_factory.hpp"
-#include <fstream>
 #include "log_macros.hpp"
+#include "shader_asset.hpp"
+#include <fstream>
 
-ShaderAsset::ShaderAsset(const std::string& path, ShaderType type, GraphicsAPI api, void* context) 
+ShaderAsset::ShaderAsset(const std::string& path, ShaderType type) 
     : Asset(path), shaderType(type) {
-    compiler = ShaderCompilerFactory::create(api, context);
+}
+
+void ShaderAsset::setShaderCompiler(std::unique_ptr<ShaderCompiler> comp) {
+    compiler = std::move(comp);
 }
 
 bool ShaderAsset::load() {

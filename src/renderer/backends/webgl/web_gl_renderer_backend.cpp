@@ -48,10 +48,9 @@ bool WebGLRendererBackend::initWindowContext() {
 void WebGLRendererBackend::draw(const Mesh& mesh) {
     GLint currentProgram;
     glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-    //printf("Current shader program: %d\n", currentProgram);
-    //printf("VAO: %d\n", mesh.getVAO());
 
-    glBindVertexArray(mesh.getVAO());
+    auto vao = static_cast<GLuint>(reinterpret_cast<uintptr_t>(mesh.getMeshBufferHandle()));
+    glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, mesh.getVertices().size() / 3);
     glBindVertexArray(0);
 }
@@ -158,10 +157,8 @@ void WebGLRendererBackend::renderSkybox(const Mesh& mesh, unsigned int shaderPro
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-    //printf("Rendering skybox - VAO: %d, Texture: %d, Shader: %d\n", mesh.getVAO(), textureID,
-           //shaderProgram);
-
-    glBindVertexArray(mesh.getVAO());
+    auto vao = static_cast<GLuint>(reinterpret_cast<uintptr_t>(mesh.getMeshBufferHandle()));
+    glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 

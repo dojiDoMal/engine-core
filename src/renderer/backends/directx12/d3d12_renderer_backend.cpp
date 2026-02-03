@@ -1,3 +1,6 @@
+#include "mesh_buffer_factory.hpp"
+#include "shader_compiler_factory.hpp"
+#include "shader_program_factory.hpp"
 #define CLASS_NAME "D3D12RendererBackend"
 #include "log_macros.hpp"
 
@@ -11,7 +14,21 @@
 
 GraphicsAPI D3D12RendererBackend::getGraphicsAPI() const { return GraphicsAPI::DIRECTX12; }
 
+std::string D3D12RendererBackend::getShaderExtension() const { return ".cso"; }
+
 unsigned int D3D12RendererBackend::getRequiredWindowFlags() const { return 0; }
+
+std::unique_ptr<ShaderProgram> D3D12RendererBackend::createShaderProgram() {
+    return ShaderProgramFactory::create(getGraphicsAPI(), this);
+}
+
+std::unique_ptr<MeshBuffer> D3D12RendererBackend::createMeshBuffer() {
+    return MeshBufferFactory::create(getGraphicsAPI(), this);
+}
+
+std::unique_ptr<ShaderCompiler> D3D12RendererBackend::createShaderCompiler() {
+    return ShaderCompilerFactory::create(getGraphicsAPI(), this);
+}
 
 D3D12RendererBackend::~D3D12RendererBackend() {
     waitForGPU();
@@ -289,7 +306,7 @@ void D3D12RendererBackend::clear(Camera* camera) {
 }
 
 void D3D12RendererBackend::draw(const Mesh& mesh) {
-    auto* d3d12Buffer = static_cast<D3D12MeshBuffer*>(mesh.getBuffer());
+    auto* d3d12Buffer = static_cast<D3D12MeshBuffer*>(mesh.getMeshBuffer());
     D3D12_VERTEX_BUFFER_VIEW views[2] = {*d3d12Buffer->getVertexBufferView(),
                                          *d3d12Buffer->getNormalBufferView()};
     commandList->IASetVertexBuffers(0, 2, views);
@@ -391,7 +408,7 @@ void D3D12RendererBackend::present() {
 }
 
 void D3D12RendererBackend::applyMaterial(Material* material) {
-    auto program = material->getProgram();
+    auto program = material->getShaderProgram();
     if (!program || !program->isValid()) {
         return;
     }

@@ -26,11 +26,15 @@ public:
     void clear(Camera* camera) override;  
     void draw(const Mesh&) override;
     void setUniforms(ShaderProgram* shaderProgram) override;
+    unsigned int createCubemapTexture(const std::vector<std::string>& faces) override;
+    std::unique_ptr<ShaderProgram> createShaderProgram() override;
+    std::unique_ptr<ShaderCompiler> createShaderCompiler() override;
+    std::unique_ptr<MeshBuffer> createMeshBuffer() override;
     void onCameraSet() override;
+    GraphicsAPI getGraphicsAPI() const override;
+    std::string getShaderExtension() const override;
 
     // Skybox management
-    unsigned int createCubemapTexture(const std::vector<std::string>& faces) override;
-    GraphicsAPI getGraphicsAPI() const override;
     void deleteCubemapTexture(unsigned int textureID);
     void renderSkybox(const Mesh& mesh, unsigned int shaderProgram, unsigned int textureID) override;
 

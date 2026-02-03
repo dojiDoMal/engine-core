@@ -6,6 +6,8 @@
 #include "../light.hpp"
 #include "../mesh.hpp"
 #include "game_object.hpp"
+#include "shader_program.hpp"
+#include <memory>
 #include <vector>
 
 struct SDL_Window;
@@ -25,8 +27,12 @@ class RendererBackend {
     virtual void renderGameObjects(std::vector<GameObject*>* gameObjects, std::vector<Light>* lights) = 0;
     virtual void clear(Camera* camera) = 0;
     virtual void draw(const Mesh&) = 0;
-    virtual unsigned int createCubemapTexture(const std::vector<std::string>& faces) = 0;
     virtual GraphicsAPI getGraphicsAPI() const = 0;
+    virtual std::string getShaderExtension() const = 0;
+    virtual unsigned int createCubemapTexture(const std::vector<std::string>& faces) = 0;
+    virtual std::unique_ptr<ShaderProgram> createShaderProgram() = 0;
+    virtual std::unique_ptr<ShaderCompiler> createShaderCompiler() = 0;
+    virtual std::unique_ptr<MeshBuffer> createMeshBuffer() = 0;
     virtual void onCameraSet() = 0;
     virtual void setUniforms(ShaderProgram* shaderProgram) = 0;
     virtual bool init(SDL_Window* window) = 0;

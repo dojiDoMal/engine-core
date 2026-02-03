@@ -1,3 +1,6 @@
+#include "mesh_buffer_factory.hpp"
+#include "shader_compiler_factory.hpp"
+#include "shader_program_factory.hpp"
 #define CLASS_NAME "OpenGLRendererBackend"
 #include "../../../log_macros.hpp"
 
@@ -16,6 +19,8 @@
 
 GraphicsAPI OpenGLRendererBackend::getGraphicsAPI() const { return GraphicsAPI::OPENGL; }
 
+std::string OpenGLRendererBackend::getShaderExtension() const { return ".glsl"; }
+
 OpenGLRendererBackend::~OpenGLRendererBackend() {
     if (matricesUBO)
         glDeleteBuffers(1, &matricesUBO);
@@ -24,6 +29,18 @@ OpenGLRendererBackend::~OpenGLRendererBackend() {
 }
 
 unsigned int OpenGLRendererBackend::getRequiredWindowFlags() const { return SDL_WINDOW_OPENGL; };
+
+std::unique_ptr<ShaderProgram> OpenGLRendererBackend::createShaderProgram() {
+    return ShaderProgramFactory::create(getGraphicsAPI());
+}
+
+std::unique_ptr<MeshBuffer> OpenGLRendererBackend::createMeshBuffer() {
+    return MeshBufferFactory::create(getGraphicsAPI());
+}
+
+std::unique_ptr<ShaderCompiler> OpenGLRendererBackend::createShaderCompiler() {
+    return ShaderCompilerFactory::create(getGraphicsAPI());
+}
 
 bool OpenGLRendererBackend::init(SDL_Window* window) {
     if (!window) {
@@ -86,7 +103,8 @@ bool OpenGLRendererBackend::initWindowContext() {
 }
 
 void OpenGLRendererBackend::draw(const Mesh& mesh) {
-    glBindVertexArray(mesh.getVAO());
+    auto vao = static_cast<GLuint>(reinterpret_cast<uintptr_t>(mesh.getMeshBufferHandle()));
+    glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, mesh.getVertices().size() / 3);
     glBindVertexArray(0);
 }
@@ -134,7 +152,7 @@ void OpenGLRendererBackend::setBufferDataImpl(const std::string& name, const voi
 }
 
 void OpenGLRendererBackend::applyMaterial(Material* material) {
-    auto program = material->getProgram();
+    auto program = material->getShaderProgram();
     if (!program || !program->isValid()) {
         return;
     }
@@ -233,7 +251,8 @@ void OpenGLRendererBackend::renderSkybox(const Mesh& mesh, unsigned int shaderPr
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-    glBindVertexArray(mesh.getVAO());
+    auto vao = static_cast<GLuint>(reinterpret_cast<uintptr_t>(mesh.getMeshBufferHandle()));
+    glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 

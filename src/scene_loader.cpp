@@ -1,28 +1,24 @@
 #define CLASS_NAME "SceneLoader"
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "tinyobjloader/tiny_obj_loader.h"
-#include "scene_loader.hpp"
-#include "scene_format.hpp"
-#include "material.hpp"
-#include "mesh_renderer.hpp"
-#include "shader_asset.hpp"
-#include "skybox.hpp"
 #include "log_macros.hpp"
 
-std::string SceneLoader::getShaderPath(const std::string& basePath, GraphicsAPI api) {
-    if (api == GraphicsAPI::WEBGL || api == GraphicsAPI::OPENGL) {
-        return basePath + ".glsl";
-    }
-    if (api == GraphicsAPI::VULKAN) {
-        return basePath + ".spv";
-    }
-    if (api == GraphicsAPI::DIRECTX12) {
-        return basePath + ".cso";
-    }
-    return basePath;
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tinyobjloader/tiny_obj_loader.h"
+
+#include "renderer/renderer_backend.hpp"
+#include "material.hpp"
+#include "mesh_renderer.hpp"
+#include "scene_format.hpp"
+#include "scene_loader.hpp"
+#include "shader_asset.hpp"
+#include "skybox.hpp"
+
+SceneLoader::SceneLoader() : rendererBackend(nullptr) {}
+
+void SceneLoader::setRendererBackend(RendererBackend& backend) {
+    rendererBackend = &backend;
 }
 
-std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, bool shadeSmooth, GraphicsAPI api) {
+std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, bool shadeSmooth) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -59,7 +55,7 @@ std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, bool
                 auto& i0 = shape.mesh.indices[f + 0];
                 auto& i1 = shape.mesh.indices[f + 1];
                 auto& i2 = shape.mesh.indices[f + 2];
-                
+
                 float v0[3] = {attrib.vertices[3 * i0.vertex_index + 0],
                                attrib.vertices[3 * i0.vertex_index + 1],
                                attrib.vertices[3 * i0.vertex_index + 2]};
@@ -69,22 +65,23 @@ std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, bool
                 float v2[3] = {attrib.vertices[3 * i2.vertex_index + 0],
                                attrib.vertices[3 * i2.vertex_index + 1],
                                attrib.vertices[3 * i2.vertex_index + 2]};
-                
+
                 // Calcular normal da face
                 float edge1[3] = {v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]};
                 float edge2[3] = {v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]};
-                float normal[3] = {
-                    edge1[1] * edge2[2] - edge1[2] * edge2[1],
-                    edge1[2] * edge2[0] - edge1[0] * edge2[2],
-                    edge1[0] * edge2[1] - edge1[1] * edge2[0]
-                };
-                
+                float normal[3] = {edge1[1] * edge2[2] - edge1[2] * edge2[1],
+                                   edge1[2] * edge2[0] - edge1[0] * edge2[2],
+                                   edge1[0] * edge2[1] - edge1[1] * edge2[0]};
+
                 // Normalizar
-                float len = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+                float len =
+                    sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
                 if (len > 0) {
-                    normal[0] /= len; normal[1] /= len; normal[2] /= len;
+                    normal[0] /= len;
+                    normal[1] /= len;
+                    normal[2] /= len;
                 }
-                
+
                 // Adicionar vértices e mesma normal para os 3 vértices
                 for (int i = 0; i < 3; i++) {
                     auto& idx = shape.mesh.indices[f + i];
@@ -99,14 +96,13 @@ std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, bool
         }
     }
 
-    auto mesh = std::make_unique<Mesh>(api);
+    auto mesh = std::make_unique<Mesh>();
     mesh->setVertices(vertices);
     mesh->setNormals(normals);
     return mesh;
 }
 
-Camera* SceneLoader::loadCamera(const std::string& filepath,
-                                                RendererBackend& rendererBackend) {
+Camera* SceneLoader::loadCamera(const std::string& filepath) {
     std::ifstream file(filepath, std::ios::binary);
     CompiledScene scene;
     file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
@@ -121,16 +117,19 @@ Camera* SceneLoader::loadCamera(const std::string& filepath,
     camera->setPosition({(float)cam.position[0], (float)cam.position[1], (float)cam.position[2]});
 
     if (cam.hasSkybox) {
-        auto graphicsAPI = rendererBackend.getGraphicsAPI();
-        auto skybox = std::make_unique<Skybox>(graphicsAPI);
+        auto skybox = std::make_unique<Skybox>();
 
+        auto shaderExt = rendererBackend->getShaderExtension();
         auto skyboxVertexShaderPtr = std::make_unique<ShaderAsset>(
-            getShaderPath(cam.skybox.material.vertexShaderPath, graphicsAPI), ShaderType::VERTEX, graphicsAPI, &rendererBackend);
-        auto skyboxFragmentShaderPtr = std::make_unique<ShaderAsset>(
-            getShaderPath(cam.skybox.material.fragmentShaderPath, graphicsAPI), ShaderType::FRAGMENT, graphicsAPI, &rendererBackend);
+            cam.skybox.material.vertexShaderPath + shaderExt, ShaderType::VERTEX);
+        skyboxVertexShaderPtr->setShaderCompiler(rendererBackend->createShaderCompiler());
 
-        auto skyboxMaterial = std::make_unique<Material>(graphicsAPI);
-        skyboxMaterial->setContext(&rendererBackend);
+        auto skyboxFragmentShaderPtr = std::make_unique<ShaderAsset>(
+            cam.skybox.material.fragmentShaderPath + shaderExt, ShaderType::FRAGMENT);
+        skyboxFragmentShaderPtr->setShaderCompiler(rendererBackend->createShaderCompiler());
+
+        auto skyboxMaterial = std::make_unique<Material>();
+        skyboxMaterial->setShaderProgram(rendererBackend->createShaderProgram());
         skyboxMaterial->setVertexShader(std::move(skyboxVertexShaderPtr));
         skyboxMaterial->setFragmentShader(std::move(skyboxFragmentShaderPtr));
         skyboxMaterial->init();
@@ -140,7 +139,7 @@ Camera* SceneLoader::loadCamera(const std::string& filepath,
             faces.push_back(row);
         }
 
-        unsigned int cubemapID = rendererBackend.createCubemapTexture(faces);
+        unsigned int cubemapID = rendererBackend->createCubemapTexture(faces);
         skybox->setTextureID(cubemapID);
         skybox->setMaterial(std::move(skyboxMaterial));
         skybox->init();
@@ -150,40 +149,46 @@ Camera* SceneLoader::loadCamera(const std::string& filepath,
     return camera;
 }
 
-std::vector<GameObject*>* SceneLoader::loadGameObjects(const std::string& filepath, GraphicsAPI api, RendererBackend* backend) {
+std::vector<GameObject*>* SceneLoader::loadGameObjects(const std::string& filepath) {
     std::ifstream file(filepath, std::ios::binary);
     CompiledScene scene;
     file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
 
     auto objects = new std::vector<GameObject*>();
-    
+
     for (uint32_t i = 0; i < scene.gameObjectCount; i++) {
         auto& goData = scene.gameObjects[i];
         auto gameObject = new GameObject();
 
         for (uint8_t j = 0; j < goData.componentCount; j++) {
             auto& comp = goData.components[j];
-            
+
             if (comp.type == ComponentType::MESH_RENDERER) {
                 auto& meshData = comp.meshRenderer;
-                
-                auto mesh = loadObjMesh(meshData.objPath, meshData.shadeSmooth, api);
-                if (!mesh || !mesh->configure(backend)) {
+
+                auto mesh = loadObjMesh(meshData.objPath, meshData.shadeSmooth);
+                if (!mesh) {
                     LOG_ERROR("Failed to load mesh: " + std::string(meshData.objPath));
                     continue;
                 }
+                mesh->setMeshBuffer(rendererBackend->createMeshBuffer());
+                mesh->configure();
 
+                auto shaderExt = rendererBackend->getShaderExtension();
                 auto vertexShader = std::make_unique<ShaderAsset>(
-                    getShaderPath(meshData.material.vertexShaderPath, api), ShaderType::VERTEX, api, backend);
-                auto fragmentShader = std::make_unique<ShaderAsset>(
-                    getShaderPath(meshData.material.fragmentShaderPath, api), ShaderType::FRAGMENT, api, backend);
+                    meshData.material.vertexShaderPath + shaderExt, ShaderType::VERTEX);
+                vertexShader->setShaderCompiler(rendererBackend->createShaderCompiler());
 
-                auto material = std::make_unique<Material>(api);
-                material->setContext(backend);
+                auto fragmentShader = std::make_unique<ShaderAsset>(
+                    meshData.material.fragmentShaderPath + shaderExt, ShaderType::FRAGMENT);
+                fragmentShader->setShaderCompiler(rendererBackend->createShaderCompiler());
+
+                auto material = std::make_unique<Material>();
+                material->setShaderProgram(rendererBackend->createShaderProgram());
                 material->setVertexShader(std::move(vertexShader));
                 material->setFragmentShader(std::move(fragmentShader));
                 material->setBaseColor(meshData.material.color);
-                
+
                 if (!material->init()) {
                     LOG_ERROR("Material init failed for mesh: " + std::string(meshData.objPath));
                     continue;

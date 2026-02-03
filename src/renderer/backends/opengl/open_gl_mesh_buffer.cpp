@@ -1,5 +1,13 @@
 #include "open_gl_mesh_buffer.hpp"
 
+OpenGLMeshBuffer::~OpenGLMeshBuffer() { 
+    destroy(); 
+}
+
+void* OpenGLMeshBuffer::getHandle() const { 
+    return reinterpret_cast<void*>(VAO); 
+}
+
 bool OpenGLMeshBuffer::createBuffers(const std::vector<float>& vertices, const std::vector<float>& normals) {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &positionVBO);

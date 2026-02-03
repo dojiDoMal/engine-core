@@ -79,9 +79,13 @@ public:
     void draw(const Mesh&) override;
     void setUniforms(ShaderProgram* shaderProgram) override;
     void onCameraSet() override;
-    unsigned int createCubemapTexture(const std::vector<std::string>& faces) override;
     GraphicsAPI getGraphicsAPI() const override;
+    std::string getShaderExtension() const override;
     void renderSkybox(const Mesh& mesh, unsigned int shaderProgram, unsigned int textureID) override;
+    unsigned int createCubemapTexture(const std::vector<std::string>& faces) override;
+    std::unique_ptr<ShaderProgram> createShaderProgram() override;
+    std::unique_ptr<ShaderCompiler> createShaderCompiler() override;
+    std::unique_ptr<MeshBuffer> createMeshBuffer() override;
     void present();
     
     VkDevice getDevice() const { return device; }

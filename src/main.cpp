@@ -1,13 +1,13 @@
 #include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
 #include "scene.hpp"
+#include "scene_manager.hpp"
 #include "stb_image_header.hpp"
 
 #include "game_object_manager.hpp"
-#include "scene_loader.hpp"
 #include "window/window_desc.hpp"
 #include "window/window_manager.hpp"
 #include "logger.hpp"
-#include "renderer/renderer_factory.hpp"
+#include <SDL_keycode.h>
 
 #ifndef PLATFORM_WEBGL
 #include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
@@ -28,6 +28,7 @@ GraphicsAPI graphicsAPI = GraphicsAPI::OPENGL;
 Scene scene;
 GameObjectManager gameObjects;
 std::unique_ptr<WindowManager> screenManager;
+std::unique_ptr<SceneManager> sceneManager;
 RendererBackend* rendererBackend = nullptr;
 WindowDesc winDesc;
 
@@ -43,10 +44,11 @@ void init() {
 
     rendererBackend = screenManager->getRenderer()->getRendererBackend();
 
-    std::string sceneFilePath = "scene.scnb";
-    scene.setCamera(SceneLoader::loadCamera(sceneFilePath, *rendererBackend));
-    scene.setLights(SceneLoader::loadLights(sceneFilePath));
-    scene.setGameObjects(SceneLoader::loadGameObjects(sceneFilePath, graphicsAPI, rendererBackend));
+    sceneManager = std::make_unique<SceneManager>();
+    sceneManager->setRendererBackend(*rendererBackend);
+    sceneManager->addScene("cena1", "scene.scnb");
+    sceneManager->addScene("cena2", "new_scene.scnb");
+    sceneManager->loadScene("cena1");
 }
 
 #ifdef PLATFORM_WEBGL
@@ -80,9 +82,12 @@ void main_loop() {
             if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
                 running = false;
             }
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
+                sceneManager->loadScene("cena2");
+            }
         }
         
-        screenManager->render(scene);
+        screenManager->render(*sceneManager->getActiveScene());
 
         if (graphicsAPI == GraphicsAPI::VULKAN) {
             auto* vkBackend = dynamic_cast<VulkanRendererBackend*>(rendererBackend);

@@ -65,7 +65,7 @@ void Renderer::render(const std::vector<GameObject*>* objects) {
             if (skybox->getMaterial()) {
                 printf("Skybox material exists\n");
                 skybox->getMaterial()->use();
-                auto program = skybox->getMaterial()->getProgram();
+                auto program = skybox->getMaterial()->getShaderProgram();
                 if (program) {
                     printf("Skybox program exists\n");
                     unsigned int shaderProgram = static_cast<unsigned int>(

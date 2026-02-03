@@ -4,12 +4,8 @@
 #include "material.hpp"
 #include "color.hpp"
 #include "light.hpp"
-#include "shader_program_factory.hpp"
 
-Material::Material(GraphicsAPI api) : api(api) {
-    if (api == GraphicsAPI::OPENGL || api == GraphicsAPI::WEBGL) {
-        shaderProgram = ShaderProgramFactory::create(api);
-    }
+Material::Material() {
 }
 
 bool Material::init() {
@@ -32,12 +28,6 @@ bool Material::init() {
 
     setBaseColor(baseColor);
     return true;
-}
-
-void Material::setContext(void* context) {
-    if (api == GraphicsAPI::DIRECTX12 || api == GraphicsAPI::VULKAN) {
-        shaderProgram = ShaderProgramFactory::create(api, context);
-    }
 }
 
 void Material::use() { 
