@@ -1,6 +1,10 @@
+#include "mesh_buffer_factory.hpp"
+#include "shader_compiler_factory.hpp"
 #define CLASS_NAME "VulkanRendererBackend"
 #include "../../../log_macros.hpp"
 
+#include "shader_program_factory.hpp"
+#include <SDL_video.h>
 #include <sstream>
 #include "vulkan_renderer_backend.hpp"
 #include "vulkan_shader_program.hpp"
@@ -18,6 +22,20 @@
 
 GraphicsAPI VulkanRendererBackend::getGraphicsAPI() const {
     return GraphicsAPI::VULKAN;
+}
+
+std::string VulkanRendererBackend::getShaderExtension() const { return ".spv"; }
+
+std::unique_ptr<ShaderProgram> VulkanRendererBackend::createShaderProgram() {
+    return ShaderProgramFactory::create(getGraphicsAPI(), this);
+}
+
+std::unique_ptr<MeshBuffer> VulkanRendererBackend::createMeshBuffer() {
+    return MeshBufferFactory::create(getGraphicsAPI(), this);
+}
+
+std::unique_ptr<ShaderCompiler> VulkanRendererBackend::createShaderCompiler() {
+    return ShaderCompilerFactory::create(getGraphicsAPI(), this);
 }
 
 VulkanRendererBackend::~VulkanRendererBackend() {
@@ -61,6 +79,14 @@ VulkanRendererBackend::~VulkanRendererBackend() {
     if (surface) vkDestroySurfaceKHR(instance, surface, nullptr);
     if (instance) vkDestroyInstance(instance, nullptr);
 }
+
+unsigned int VulkanRendererBackend::getRequiredWindowFlags() const {
+    return SDL_WINDOW_VULKAN;
+};
+
+bool VulkanRendererBackend::init(SDL_Window* window) {
+    return true;
+};
 
 bool VulkanRendererBackend::initWindowContext() {
     printf("[Vulkan] initWindowContext - creating instance\n");
@@ -123,7 +149,10 @@ bool VulkanRendererBackend::createInstance() {
 bool VulkanRendererBackend::pickPhysicalDevice() {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-    if (deviceCount == 0) return false;
+    if (deviceCount == 0) {
+        LOG_WARN("No physical device found!");
+        return false;
+    }
     
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
@@ -136,15 +165,26 @@ bool VulkanRendererBackend::createLogicalDevice() {
     // Encontrar queue families
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+    
+    LOG_INFO("Queue family count: " + std::to_string(queueFamilyCount));
+
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
     
+    bool foundGraphicsQueue = false;
     for (uint32_t i = 0; i < queueFamilies.size(); i++) {
         if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             graphicsQueueFamily = i;
-            presentQueueFamily = i; // Simplificado
+            presentQueueFamily = i; 
+            foundGraphicsQueue = true;
+            LOG_INFO("Found graphics queue family at index: " + std::to_string(i));
             break;
         }
+    }
+
+    if (!foundGraphicsQueue) {
+        LOG_ERROR("No graphics queue family found!");
+        return false;
     }
     
     float queuePriority = 1.0f;
@@ -166,8 +206,9 @@ bool VulkanRendererBackend::createLogicalDevice() {
     createInfo.enabledExtensionCount = 1;
     createInfo.ppEnabledExtensionNames = deviceExtensions;
     
-    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
-        LOG_ERROR("failed to create logical device!");       
+    VkResult result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
+    if (result != VK_SUCCESS) {
+        LOG_ERROR("Failed to create logical device! Error code: " + std::to_string(result));
         return false;
     }
 
@@ -631,7 +672,7 @@ void VulkanRendererBackend::onCameraSet() {
     // Atualizar clear color se necessário
 }
 
-void VulkanRendererBackend::clear() {
+void VulkanRendererBackend::clear(Camera* camera) {
     vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
     vkResetFences(device, 1, &inFlightFence);
     
@@ -666,14 +707,14 @@ void VulkanRendererBackend::clear() {
 }
 
 void VulkanRendererBackend::draw(const Mesh& mesh) {
-    auto* vkMeshBuffer = static_cast<VulkanMeshBuffer*>(mesh.getBuffer());
+    auto* vkMeshBuffer = static_cast<VulkanMeshBuffer*>(mesh.getMeshBuffer());
     VkBuffer vertexBuffers[] = {vkMeshBuffer->getVertexBuffer(), vkMeshBuffer->getNormalBuffer()};
     VkDeviceSize offsets[] = {0, 0};
     vkCmdBindVertexBuffers(commandBuffers[currentImageIndex], 0, 2, vertexBuffers, offsets);
     vkCmdDraw(commandBuffers[currentImageIndex], mesh.getVertices().size() / 3, 1, 0, 0);
 }
 
-void VulkanRendererBackend::setUniforms(void* shaderProgram) {
+void VulkanRendererBackend::setUniforms(ShaderProgram* shaderProgram) {
     if (!mainCamera) return;
     
     // Bind pipeline do material atual

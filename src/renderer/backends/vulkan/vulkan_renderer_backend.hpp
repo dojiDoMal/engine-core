@@ -5,6 +5,7 @@
 #include "../../renderer_backend.hpp"
 #include <vector>
 
+struct SDL_Window;
 class VulkanRendererBackend : public RendererBackend {
 private:
     VkInstance instance = VK_NULL_HANDLE;
@@ -45,6 +46,7 @@ private:
     uint32_t currentImageIndex = 0;
     VkFormat swapchainFormat;
     VkExtent2D swapchainExtent;
+    SDL_Window* window;
     
     bool createInstance();
     bool pickPhysicalDevice();
@@ -69,13 +71,21 @@ public:
     ~VulkanRendererBackend();
     bool init() override;
     bool initWindowContext() override;
-    void clear() override;
+    void bindCamera(Camera* camera) override {return;};
+    void applyMaterial(Material* material) override {};
+    void renderGameObjects(std::vector<GameObject*>* gameObjects, std::vector<Light>* lights) override {};
+    void setBufferDataImpl(const std::string& name, const void* data, size_t size) override {};
+    void clear(Camera* camera) override;
     void draw(const Mesh&) override;
-    void setUniforms(void* shaderProgram) override;
+    void setUniforms(ShaderProgram* shaderProgram) override;
     void onCameraSet() override;
-    unsigned int createCubemapTexture(const std::vector<std::string>& faces) override;
     GraphicsAPI getGraphicsAPI() const override;
+    std::string getShaderExtension() const override;
     void renderSkybox(const Mesh& mesh, unsigned int shaderProgram, unsigned int textureID) override;
+    unsigned int createCubemapTexture(const std::vector<std::string>& faces) override;
+    std::unique_ptr<ShaderProgram> createShaderProgram() override;
+    std::unique_ptr<ShaderCompiler> createShaderCompiler() override;
+    std::unique_ptr<MeshBuffer> createMeshBuffer() override;
     void present();
     
     VkDevice getDevice() const { return device; }
@@ -88,6 +98,9 @@ public:
     VkRenderPass getRenderPass() const { return renderPass; }
     VkDescriptorSetLayout getDescriptorSetLayout() const { return descriptorSetLayout; }
     void setSurface(VkSurfaceKHR surf) { surface = surf; }
+    void setWindow(SDL_Window* win) { window = win; }
+    unsigned int getRequiredWindowFlags() const override;
+    bool init(SDL_Window* window) override;
 };
 
 #endif // VULKAN_RENDERER_BACKEND_HPP

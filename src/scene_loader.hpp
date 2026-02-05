@@ -12,14 +12,15 @@
 
 class SceneLoader {
 private:
-  static std::string getShaderPath(const std::string& basePath, GraphicsAPI api);
-  static std::unique_ptr<Mesh> loadObjMesh(const std::string& filepath, GraphicsAPI api);
+  RendererBackend* rendererBackend = nullptr;
+  std::unique_ptr<Mesh> loadObjMesh(const std::string& filepath, bool shadeSmooth);
 
 public:
-  static std::unique_ptr<Camera> loadCamera(const std::string& filepath,
-                                            RendererBackend& rendererBackend);
-  static std::vector<std::unique_ptr<GameObject>> loadMeshes(const std::string& filepath, GraphicsAPI api, RendererBackend* backend);
-  static std::vector<Light> loadLights(const std::string& filepath);
+  SceneLoader();
+  void setRendererBackend(RendererBackend&);
+  Camera* loadCamera(const std::string& filepath);
+  std::vector<GameObject*>* loadGameObjects(const std::string& filepath);
+  std::vector<Light>* loadLights(const std::string& filepath);
 
 };
 

@@ -1,7 +1,7 @@
 #include "skybox.hpp"
 
-Skybox::Skybox(GraphicsAPI api) {
-    cubeMesh = std::make_unique<Mesh>(api);
+Skybox::Skybox() {
+    cubeMesh = std::make_unique<Mesh>();
 }
 
 void Skybox::setMaterial(std::unique_ptr<Material> material) {

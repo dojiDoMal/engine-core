@@ -9,13 +9,13 @@
 class ShaderAsset : public Asset
 {
 private:
-    void* shaderHandle = nullptr;
     ShaderType shaderType;
-    std::unique_ptr<ShaderCompiler> compiler;
+    void* shaderHandle = nullptr;
     bool isCompiled = false;
+    std::unique_ptr<ShaderCompiler> compiler;
 
 public:
-    ShaderAsset(const std::string& path, ShaderType type, GraphicsAPI api, void* context = nullptr);
+    ShaderAsset(const std::string& path, ShaderType type);
     ~ShaderAsset() override { unload(); }
     
     bool load() override;
@@ -23,6 +23,8 @@ public:
     
     void* getHandle() const { return shaderHandle; }
     ShaderType getType() const { return shaderType; }
+
+    void setShaderCompiler(std::unique_ptr<ShaderCompiler>);
 };
 
 #endif // SHADERASSET_HPP

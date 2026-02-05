@@ -1,9 +1,13 @@
+#include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
+#include "scene.hpp"
+#include "scene_manager.hpp"
 #include "stb_image_header.hpp"
 
 #include "game_object_manager.hpp"
-#include "scene_loader.hpp"
-#include "window_manager.hpp"
+#include "window/window_desc.hpp"
+#include "window/window_manager.hpp"
 #include "logger.hpp"
+#include <SDL_keycode.h>
 
 #ifndef PLATFORM_WEBGL
 #include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
@@ -18,34 +22,33 @@
 GraphicsAPI graphicsAPI = GraphicsAPI::WEBGL;
 #else
 // Escolha a API aqui: GraphicsAPI::OPENGL ou GraphicsAPI::VULKAN
-GraphicsAPI graphicsAPI = GraphicsAPI::VULKAN;
+GraphicsAPI graphicsAPI = GraphicsAPI::OPENGL;
 #endif
 
+Scene scene;
 GameObjectManager gameObjects;
-std::unique_ptr<WindowManager> windowMan;
-Renderer* windowRenderer = nullptr;
+std::unique_ptr<WindowManager> screenManager;
+std::unique_ptr<SceneManager> sceneManager;
 RendererBackend* rendererBackend = nullptr;
-SDL_Window* currentWindow = nullptr;
-std::unique_ptr<Camera> mainCameraOwner;
+WindowDesc winDesc;
 
 void init() {
-    windowMan = std::make_unique<WindowManager>(graphicsAPI);
-    windowRenderer = windowMan->getRenderer();
-    rendererBackend = windowRenderer->getRendererBackend();
-    currentWindow = windowMan->getWindow();
+    
+    winDesc.title = "Engine";
+    winDesc.width = 800;
+    winDesc.height = 600;
+    
+    screenManager = std::make_unique<WindowManager>();
+    screenManager->setGraphicsApi(graphicsAPI);
+    screenManager->init(winDesc);
 
-    std::string sceneFilePath = "scene.scnb";
+    rendererBackend = screenManager->getRenderer()->getRendererBackend();
 
-    mainCameraOwner = SceneLoader::loadCamera(sceneFilePath, *rendererBackend);
-    rendererBackend->setCamera(mainCameraOwner.get());
-
-    auto lights = SceneLoader::loadLights(sceneFilePath);
-    rendererBackend->setLights(lights);
-
-    auto objects = SceneLoader::loadMeshes(sceneFilePath, graphicsAPI, rendererBackend);
-    for (auto& obj : objects) {
-        gameObjects.add(obj.release());
-    }
+    sceneManager = std::make_unique<SceneManager>();
+    sceneManager->setRendererBackend(*rendererBackend);
+    sceneManager->addScene("cena1", "scene.scnb");
+    sceneManager->addScene("cena2", "new_scene.scnb");
+    sceneManager->loadScene("cena1");
 }
 
 #ifdef PLATFORM_WEBGL
@@ -63,9 +66,8 @@ void main_loop() {
         }
     }
 
-    windowRenderer->clearScreen();
-    windowRenderer->render(gameObjects.get());
-    SDL_GL_SwapWindow(currentWindow);
+    screenManager->getRenderer()->render(scene);
+    SDL_GL_SwapWindow(screenManager->getWindow());
 }
 #else
 void main_loop() {
@@ -80,17 +82,21 @@ void main_loop() {
             if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
                 running = false;
             }
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
+                sceneManager->loadScene("cena2");
+            }
         }
-
-        windowRenderer->clearScreen();
-
-        windowRenderer->render(gameObjects.get());
+        
+        screenManager->render(*sceneManager->getActiveScene());
 
         if (graphicsAPI == GraphicsAPI::VULKAN) {
             auto* vkBackend = dynamic_cast<VulkanRendererBackend*>(rendererBackend);
             if (vkBackend) vkBackend->present();
+        } else if (graphicsAPI == GraphicsAPI::DIRECTX12) {
+            auto* d3d12Backend = dynamic_cast<D3D12RendererBackend*>(rendererBackend);
+            if (d3d12Backend) d3d12Backend->present();
         } else {
-            SDL_GL_SwapWindow(currentWindow);
+            SDL_GL_SwapWindow(screenManager->getWindow());
         }
     }
 

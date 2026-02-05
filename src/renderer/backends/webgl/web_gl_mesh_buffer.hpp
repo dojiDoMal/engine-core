@@ -11,13 +11,13 @@ private:
     GLuint normalVBO = 0;
 
 public:
-    ~WebGLMeshBuffer() override { destroy(); }
+    ~WebGLMeshBuffer() override;
     
     bool createBuffers(const std::vector<float>& vertices, const std::vector<float>& normals) override;
     void bind() override;
     void unbind() override;
     void destroy() override;
-    void* getHandle() const override { return reinterpret_cast<void*>(VAO); }
+    void* getHandle() const override;
 };
 
 #endif 

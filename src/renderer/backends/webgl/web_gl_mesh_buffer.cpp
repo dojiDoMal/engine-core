@@ -1,6 +1,14 @@
 #include "web_gl_mesh_buffer.hpp"
 #include <cstdio>
 
+WebGLMeshBuffer::~WebGLMeshBuffer() { 
+    destroy(); 
+}
+
+void* WebGLMeshBuffer::getHandle() const { 
+    return reinterpret_cast<void*>(VAO); 
+}
+
 bool WebGLMeshBuffer::createBuffers(const std::vector<float>& vertices, const std::vector<float>& normals) {
     printf("Creating buffers with %d vertices, %d normals\n", (int)vertices.size(), (int)normals.size());
     

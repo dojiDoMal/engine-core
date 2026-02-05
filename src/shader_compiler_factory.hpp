@@ -7,7 +7,7 @@
 
 class ShaderCompilerFactory {
 public:
-    static std::unique_ptr<ShaderCompiler> create(GraphicsAPI api, void* context);
+    static std::unique_ptr<ShaderCompiler> create(GraphicsAPI api, void* context = nullptr);
 };
 
 #endif // SHADERCOMPILERFACTORY_HPP
