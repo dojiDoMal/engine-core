@@ -1,8 +1,8 @@
 #ifndef WINDOW_MANAGER_HPP
 #define WINDOW_MANAGER_HPP
 
-#include "graphics_api.hpp"
-#include "renderer/renderer.hpp"
+#include "../graphics_api.hpp"
+#include "../renderer/renderer.hpp"
 #include "window_desc.hpp"
 #include <SDL2/SDL.h>
 

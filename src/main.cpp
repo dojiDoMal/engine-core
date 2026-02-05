@@ -1,4 +1,7 @@
+#ifdef _WIN32
 #include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
+#endif
+
 #include "scene.hpp"
 #include "scene_manager.hpp"
 #include "stb_image_header.hpp"
@@ -7,7 +10,7 @@
 #include "window/window_desc.hpp"
 #include "window/window_manager.hpp"
 #include "logger.hpp"
-#include <SDL_keycode.h>
+#include <SDL2/SDL_keycode.h>
 
 #ifndef PLATFORM_WEBGL
 #include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
@@ -92,9 +95,11 @@ void main_loop() {
         if (graphicsAPI == GraphicsAPI::VULKAN) {
             auto* vkBackend = dynamic_cast<VulkanRendererBackend*>(rendererBackend);
             if (vkBackend) vkBackend->present();
+        #ifdef _WIN32
         } else if (graphicsAPI == GraphicsAPI::DIRECTX12) {
             auto* d3d12Backend = dynamic_cast<D3D12RendererBackend*>(rendererBackend);
             if (d3d12Backend) d3d12Backend->present();
+        #endif
         } else {
             SDL_GL_SwapWindow(screenManager->getWindow());
         }

@@ -21,6 +21,7 @@ public:
   Camera* loadCamera(const std::string& filepath);
   std::vector<GameObject*>* loadGameObjects(const std::string& filepath);
   std::vector<Light>* loadLights(const std::string& filepath);
+  bool validateSceneFile(const std::string& filepath);
 
 };
 

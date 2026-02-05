@@ -1,3 +1,5 @@
+#define CLASS_NAME "SceneManager"
+#include "log_macros.hpp"
 #include "scene_manager.hpp"
 #include "renderer/renderer_backend.hpp"
 #include "scene_loader.hpp"
@@ -14,22 +16,25 @@ void SceneManager::addScene(const std::string& name, const std::string& path) {
 
 Scene* SceneManager::getActiveScene() const { return activeScene; }
 
-// TODO: revisar lógica
+// TODO: revisar esse delete
 void SceneManager::loadScene(const std::string& name) {
-    
-    // nao tenho certeza de precisa ou se deve fazer isso
+    auto it = sceneRegistry.find(name);
+    if (it == sceneRegistry.end()) {
+        LOG_WARN("Scene not found: " + name);
+        return;
+    }
+
     if (activeScene != nullptr) {
         delete activeScene;
     }
 
     activeSceneName = name;
-    auto path = sceneRegistry[name];
-
     activeScene = new Scene();
-    activeScene->setCamera(sceneLoader.loadCamera(path));
-    activeScene->setLights(sceneLoader.loadLights(path));
-    activeScene->setGameObjects(sceneLoader.loadGameObjects(path));
+    activeScene->setCamera(sceneLoader.loadCamera(it->second));
+    activeScene->setLights(sceneLoader.loadLights(it->second));
+    activeScene->setGameObjects(sceneLoader.loadGameObjects(it->second));
 }
+
 
 void SceneManager::setRendererBackend(RendererBackend& rendererBackend) {
     sceneLoader.setRendererBackend(rendererBackend);

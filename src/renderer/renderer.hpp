@@ -3,9 +3,9 @@
 
 #include "../game_object.hpp"
 #include "../mesh.hpp"
-#include "graphics_api.hpp"
+#include "../graphics_api.hpp"
+#include "../scene.hpp"
 #include "renderer_backend.hpp"
-#include "scene.hpp"
 
 class Material;
 

@@ -3,9 +3,9 @@
 
 #include "../game_object.hpp"
 #include "../material.hpp"
-#include "log_macros.hpp"
-#include "renderer.hpp"
+#include "../log_macros.hpp"
 #include "renderer_factory.hpp"
+#include "renderer.hpp"
 #include <cstdint>
 #include <cstdio>
 
@@ -53,46 +53,6 @@ void Renderer::render(const Scene& scene) {
     backend->clear(scene.getCamera());
     backend->renderGameObjects(const_cast<std::vector<GameObject*>*>(scene.getGameObjects()),
                                const_cast<std::vector<Light>*>(scene.getLights()));
-}
-
-void Renderer::renderGameObject(GameObject& gameObject) {
-   
-    auto mesh = gameObject.getMesh();
-    if (!mesh) {
-        LOG_INFO("Mesh is null!");
-        return;
-    }
-
-    auto meshRenderer = gameObject.getMeshRenderer();
-    if (!meshRenderer) {
-        LOG_INFO("MeshRenderer is null!");
-        return;
-    }
-
-    auto mat = meshRenderer->getMaterial();
-    if (!mat) {
-        LOG_INFO("Material is null!");
-        return;
-    }
-    
-    mat->use();
-
-    auto program = mat->getProgram();
-    if (program && program->isValid()) {        
-        auto value = reinterpret_cast<std::uintptr_t>(program->getHandle());
-        unsigned int shader = static_cast<unsigned int>(value);
-        backend->setUniforms(program);
-        
-        auto& lights = backend->getLights();
-        if (!lights.empty()) {
-            program->setUniformBuffer("LightData", 2, &lights[0].direction, sizeof(float) * 3);
-        }
-    } else {
-        LOG_ERROR("Invalid shader program");
-        return;
-    }
-    
-    renderMesh(*mesh);
 }
 
 //deprecated

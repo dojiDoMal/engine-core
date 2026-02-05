@@ -5,8 +5,8 @@
 #include "../graphics_api.hpp"
 #include "../light.hpp"
 #include "../mesh.hpp"
-#include "game_object.hpp"
-#include "shader_program.hpp"
+#include "../game_object.hpp"
+#include "../shader_program.hpp"
 #include <memory>
 #include <vector>
 

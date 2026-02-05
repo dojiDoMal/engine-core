@@ -5,7 +5,9 @@
 #else
     #include "backends/opengl/open_gl_renderer_backend.hpp"
     #include "backends/vulkan/vulkan_renderer_backend.hpp"
+    #ifdef _WIN32
     #include "backends/directx12/d3d12_renderer_backend.hpp"
+    #endif
 #endif
 
 RendererBackend* RendererFactory::create(const GraphicsAPI& api) {
