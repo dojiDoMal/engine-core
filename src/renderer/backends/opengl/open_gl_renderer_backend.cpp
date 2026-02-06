@@ -1,9 +1,9 @@
-#include "mesh_buffer_factory.hpp"
-#include "shader_compiler_factory.hpp"
-#include "shader_program_factory.hpp"
 #define CLASS_NAME "OpenGLRendererBackend"
 #include "../../../log_macros.hpp"
 
+#include "mesh_buffer_factory.hpp"
+#include "shader_compiler_factory.hpp"
+#include "shader_program_factory.hpp"
 #include "../../../color.hpp"
 #include "../../../game_object.hpp"
 #include "../../../material.hpp"
@@ -257,4 +257,8 @@ void OpenGLRendererBackend::renderSkybox(const Mesh& mesh, unsigned int shaderPr
     glBindVertexArray(0);
 
     glDepthFunc(GL_LESS);
+}
+
+void OpenGLRendererBackend::present(SDL_Window* window) {
+    SDL_GL_SwapWindow(window);
 }

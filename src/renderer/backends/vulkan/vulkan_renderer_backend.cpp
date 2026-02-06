@@ -773,7 +773,7 @@ void VulkanRendererBackend::renderSkybox(const Mesh& mesh, unsigned int shaderPr
     // Implementar skybox Vulkan
 }
 
-void VulkanRendererBackend::present() {
+void VulkanRendererBackend::present(SDL_Window* window) {
     vkCmdEndRenderPass(commandBuffers[currentImageIndex]);
     
     if (vkEndCommandBuffer(commandBuffers[currentImageIndex]) != VK_SUCCESS) {

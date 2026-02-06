@@ -49,10 +49,20 @@ void Renderer::render(const Scene& scene) {
         return;
     }
 
+    // Order is important here
+
     backend->bindCamera(scene.getCamera());
+
     backend->clear(scene.getCamera());
+
     backend->renderGameObjects(const_cast<std::vector<GameObject*>*>(scene.getGameObjects()),
                                const_cast<std::vector<Light>*>(scene.getLights()));
+}
+
+void Renderer::present(SDL_Window* window) {
+    if (backend) {
+        backend->present(window);
+    }
 }
 
 //deprecated

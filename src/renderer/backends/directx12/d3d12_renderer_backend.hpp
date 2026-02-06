@@ -1,8 +1,8 @@
 #ifndef D3D12_RENDERER_BACKEND_HPP
 #define D3D12_RENDERER_BACKEND_HPP
 
+#include "../../../game_object.hpp"
 #include "../../renderer_backend.hpp"
-#include "game_object.hpp"
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <vector>
@@ -59,7 +59,7 @@ public:
     std::unique_ptr<ShaderProgram> createShaderProgram() override;
     std::unique_ptr<ShaderCompiler> createShaderCompiler() override;
     std::unique_ptr<MeshBuffer> createMeshBuffer() override;
-    void present();
+    void present(SDL_Window* window) override;
     
     ID3D12Device* getDevice() const { return device; }
     ID3D12GraphicsCommandList* getCommandList() const { return commandList; }

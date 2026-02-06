@@ -19,6 +19,7 @@ public:
     void render(Scene& scene);
     SDL_Window* getWindow() {return window;};
     Renderer* getRenderer(){return renderer;}
+    void present();
     void setGraphicsApi(const GraphicsAPI &api) { graphicsApi = api; }
 };
 

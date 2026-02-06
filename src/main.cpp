@@ -11,6 +11,7 @@
 #include "window/window_manager.hpp"
 #include "logger.hpp"
 #include <SDL2/SDL_keycode.h>
+#include "input_manager.hpp"
 
 #ifndef PLATFORM_WEBGL
 #include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
@@ -32,6 +33,7 @@ Scene scene;
 GameObjectManager gameObjects;
 std::unique_ptr<WindowManager> screenManager;
 std::unique_ptr<SceneManager> sceneManager;
+std::unique_ptr<InputManager> inputManager;
 RendererBackend* rendererBackend = nullptr;
 WindowDesc winDesc;
 
@@ -52,6 +54,14 @@ void init() {
     sceneManager->addScene("cena1", "scene.scnb");
     sceneManager->addScene("cena2", "new_scene.scnb");
     sceneManager->loadScene("cena1");
+
+    inputManager = std::make_unique<InputManager>();
+    inputManager->bindKey(SDLK_ESCAPE, [&]() { 
+        inputManager->reset(); // força quit
+    });
+    inputManager->bindKey(SDLK_SPACE, [&]() {
+        sceneManager->loadScene("cena2");
+    });
 }
 
 #ifdef PLATFORM_WEBGL
@@ -74,35 +84,19 @@ void main_loop() {
 }
 #else
 void main_loop() {
-    bool running = true;
-    SDL_Event event;
 
+    bool running = true;
     while (running) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = false;
-            }
-            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
-                running = false;
-            }
-            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
-                sceneManager->loadScene("cena2");
-            }
+
+        inputManager->processEvents();
+        
+        if (inputManager->shouldQuit()) {
+            running = false;
         }
         
         screenManager->render(*sceneManager->getActiveScene());
 
-        if (graphicsAPI == GraphicsAPI::VULKAN) {
-            auto* vkBackend = dynamic_cast<VulkanRendererBackend*>(rendererBackend);
-            if (vkBackend) vkBackend->present();
-        #ifdef _WIN32
-        } else if (graphicsAPI == GraphicsAPI::DIRECTX12) {
-            auto* d3d12Backend = dynamic_cast<D3D12RendererBackend*>(rendererBackend);
-            if (d3d12Backend) d3d12Backend->present();
-        #endif
-        } else {
-            SDL_GL_SwapWindow(screenManager->getWindow());
-        }
+        screenManager->present();
     }
 
     SDL_Quit();

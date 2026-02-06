@@ -21,6 +21,8 @@ class RendererBackend {
     virtual ~RendererBackend() = default;
 
     virtual bool init() = 0;
+    virtual bool init(SDL_Window* window) = 0;
+    virtual void present(SDL_Window* window) = 0;
     virtual bool initWindowContext() = 0;
     virtual void bindCamera(Camera* camera) = 0;
     virtual void applyMaterial(Material* material) = 0;
@@ -35,7 +37,6 @@ class RendererBackend {
     virtual std::unique_ptr<MeshBuffer> createMeshBuffer() = 0;
     virtual void onCameraSet() = 0;
     virtual void setUniforms(ShaderProgram* shaderProgram) = 0;
-    virtual bool init(SDL_Window* window) = 0;
     virtual unsigned int getRequiredWindowFlags() const = 0;
     virtual void renderSkybox(const Mesh& mesh, unsigned int shaderProgram,
                               unsigned int textureID) = 0;

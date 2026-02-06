@@ -86,7 +86,7 @@ public:
     std::unique_ptr<ShaderProgram> createShaderProgram() override;
     std::unique_ptr<ShaderCompiler> createShaderCompiler() override;
     std::unique_ptr<MeshBuffer> createMeshBuffer() override;
-    void present();
+    void present(SDL_Window* window) override;
     
     VkDevice getDevice() const { return device; }
     VkPhysicalDevice getPhysicalDevice() const { return physicalDevice; }

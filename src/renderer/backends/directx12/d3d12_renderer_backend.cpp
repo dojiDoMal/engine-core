@@ -1,9 +1,9 @@
-#include "mesh_buffer_factory.hpp"
-#include "shader_compiler_factory.hpp"
-#include "shader_program_factory.hpp"
 #define CLASS_NAME "D3D12RendererBackend"
-#include "log_macros.hpp"
+#include "../../../log_macros.hpp"
 
+#include "../../../mesh_buffer_factory.hpp"
+#include "../../../shader_compiler_factory.hpp"
+#include "../../../shader_program_factory.hpp"
 #include "d3d12_mesh_buffer.hpp"
 #include "d3d12_renderer_backend.hpp"
 #include "d3d12_shader_program.hpp"
@@ -390,7 +390,7 @@ unsigned int D3D12RendererBackend::createCubemapTexture(const std::vector<std::s
 void D3D12RendererBackend::renderSkybox(const Mesh& mesh, unsigned int shaderProgram,
                                         unsigned int textureID) {}
 
-void D3D12RendererBackend::present() {
+void D3D12RendererBackend::present(SDL_Window* window) {
     D3D12_RESOURCE_BARRIER barrier = {};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Transition.pResource = renderTargets[frameIndex];

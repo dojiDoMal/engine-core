@@ -18,6 +18,7 @@ private:
 public:
     ~OpenGLRendererBackend();
     bool init() override;
+    void present(SDL_Window* window) override;
     bool initWindowContext() override;
     void bindCamera(Camera* camera) override;
     void applyMaterial(Material* material) override;

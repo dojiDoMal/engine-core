@@ -18,6 +18,12 @@ void WindowManager::render(Scene& scene) {
     renderer->render(scene);
 }
 
+void WindowManager::present() {
+    if (renderer) {
+        renderer->present(window);
+    }
+}
+
 bool WindowManager::init(const WindowDesc& desc) {
 
     renderer = new Renderer();

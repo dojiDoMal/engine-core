@@ -2,7 +2,6 @@
 #define RENDERER_HPP
 
 #include "../game_object.hpp"
-#include "../mesh.hpp"
 #include "../graphics_api.hpp"
 #include "../scene.hpp"
 #include "renderer_backend.hpp"
@@ -22,6 +21,7 @@ public:
     void preRender();
     void render(const std::vector<GameObject*>* objects);
     void render(const Scene& scene);
+    void present(SDL_Window* window);
 };
 
 #endif // RENDERER_HPP
