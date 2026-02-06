@@ -19,10 +19,10 @@ void InputManager::bindKey(SDL_Keycode key, ActionCallback callback) {
     key_bindings[key] = callback;
 }
 
-bool InputManager::shouldQuit() { 
+bool InputManager::getQuitEvent() { 
   return quit_requested; 
 }
   
-void InputManager::reset() { 
-  quit_requested = false; 
+void InputManager::requestQuit() { 
+  quit_requested = true; 
 }

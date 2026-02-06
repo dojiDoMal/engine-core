@@ -11,8 +11,8 @@ public:
 
     void processEvents();
     void bindKey(SDL_Keycode key, ActionCallback callback);
-    bool shouldQuit();
-    void reset();
+    bool getQuitEvent();
+    void requestQuit();
 
 private:
     bool quit_requested = false;

@@ -56,9 +56,11 @@ void init() {
     sceneManager->loadScene("cena1");
 
     inputManager = std::make_unique<InputManager>();
+
     inputManager->bindKey(SDLK_ESCAPE, [&]() { 
-        inputManager->reset(); // força quit
+        inputManager->requestQuit(); 
     });
+    
     inputManager->bindKey(SDLK_SPACE, [&]() {
         sceneManager->loadScene("cena2");
     });
@@ -70,6 +72,7 @@ void init() {
 
 #ifdef PLATFORM_WEBGL
 void main_loop() {
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT ||
@@ -90,7 +93,7 @@ void main_loop() {
 
         inputManager->processEvents();
         
-        if (inputManager->shouldQuit()) {
+        if (inputManager->getQuitEvent()) {
             running = false;
         }
         
