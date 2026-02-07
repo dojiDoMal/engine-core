@@ -1,10 +1,11 @@
 #include "logger.hpp"
-#include <fstream>
-#include <mutex>
 #include <chrono>
+#include <fstream>
 #include <iomanip>
+#include <mutex>
 #include <sstream>
 #include <string>
+
 
 static std::ofstream g_logFile;
 static std::mutex g_logMutex;
@@ -25,7 +26,8 @@ static std::string formatDateTime(const char* format) {
 }
 
 void Logger::init(const char* baseName) {
-    std::string filename = "logs/" + std::string( baseName) + "_" + formatDateTime("%Y-%m-%d_%H-%M-%S") + ".log";
+    std::string filename =
+        "logs/" + std::string(baseName) + "_" + formatDateTime("%Y-%m-%d_%H-%M-%S") + ".log";
     g_logFile.open(filename, std::ios::out | std::ios::app);
 }
 
@@ -39,6 +41,5 @@ void Logger::log(const char* className, const char* methodName, const char* mess
     if (!g_logFile.is_open())
         return;
     g_logFile << "[" << formatDateTime("%Y-%m-%d %H:%M:%S") << "] "
-              << "[" << className << "::" << methodName << "] "
-              << message << std::endl;
+              << "[" << className << "::" << methodName << "] " << message << std::endl;
 }

@@ -4,20 +4,19 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tinyobjloader/tiny_obj_loader.h"
 
-#include <fstream>
-#include "renderer/renderer_backend.hpp"
 #include "material.hpp"
 #include "mesh_renderer.hpp"
+#include "renderer/renderer_backend.hpp"
 #include "scene_format.hpp"
 #include "scene_loader.hpp"
 #include "shader_asset.hpp"
 #include "skybox.hpp"
+#include <fstream>
+
 
 SceneLoader::SceneLoader() : rendererBackend(nullptr) {}
 
-void SceneLoader::setRendererBackend(RendererBackend& backend) {
-    rendererBackend = &backend;
-}
+void SceneLoader::setRendererBackend(RendererBackend& backend) { rendererBackend = &backend; }
 
 std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, bool shadeSmooth) {
     tinyobj::attrib_t attrib;
@@ -104,12 +103,13 @@ std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, bool
 }
 
 Camera* SceneLoader::loadCamera(const std::string& filepath) {
-    if (!validateSceneFile(filepath)) return nullptr;
+    if (!validateSceneFile(filepath))
+        return nullptr;
 
     std::ifstream file(filepath, std::ios::binary);
     CompiledScene scene;
     file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
-    
+
     auto camera = new Camera();
     auto& cam = scene.camera;
 
@@ -153,12 +153,13 @@ Camera* SceneLoader::loadCamera(const std::string& filepath) {
 }
 
 std::vector<GameObject*>* SceneLoader::loadGameObjects(const std::string& filepath) {
-    if (!validateSceneFile(filepath)) return nullptr;
+    if (!validateSceneFile(filepath))
+        return nullptr;
 
     std::ifstream file(filepath, std::ios::binary);
     CompiledScene scene;
     file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
-    
+
     auto objects = new std::vector<GameObject*>();
 
     for (uint32_t i = 0; i < scene.gameObjectCount; i++) {
@@ -214,12 +215,13 @@ std::vector<GameObject*>* SceneLoader::loadGameObjects(const std::string& filepa
 }
 
 std::vector<Light>* SceneLoader::loadLights(const std::string& filepath) {
-    if (!validateSceneFile(filepath)) return nullptr;
+    if (!validateSceneFile(filepath))
+        return nullptr;
 
     std::ifstream file(filepath, std::ios::binary);
     CompiledScene scene;
     file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
-    
+
     auto lights = new std::vector<Light>();
     for (uint32_t i = 0; i < scene.lightCount; i++) {
         Light light;

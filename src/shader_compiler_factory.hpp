@@ -6,7 +6,7 @@
 #include <memory>
 
 class ShaderCompilerFactory {
-public:
+  public:
     static std::unique_ptr<ShaderCompiler> create(GraphicsAPI api, void* context = nullptr);
 };
 

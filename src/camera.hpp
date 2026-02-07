@@ -5,9 +5,8 @@
 #include "skybox.hpp"
 #include "vector3.hpp"
 
-
 class Camera {
-private:
+  private:
     ColorRGBA backgroundColor = {0.2f, 0.3f, 0.3f, 1.0f};
     Vector3 position = {0.0f, 2.0f, 2.0f};
     std::unique_ptr<Skybox> skybox;
@@ -17,16 +16,14 @@ private:
     float width = 800.0f;
     float height = 600.0f;
 
-public:
+  public:
     Camera() = default;
     ~Camera() = default;
 
     const Vector3& getPosition() const { return position; }
-    void setPosition(const Vector3 &position) { this->position = position; }
+    void setPosition(const Vector3& position) { this->position = position; }
     ColorRGBA& getBackgroundColor() { return backgroundColor; }
-    void setBackgroundColor(const ColorRGBA &color) {
-        this->backgroundColor = color;
-    }
+    void setBackgroundColor(const ColorRGBA& color) { this->backgroundColor = color; }
     void setFov(float fov) { this->fov = fov; }
     float getFov() const { return fov; }
     void setNearDistance(float nearDistance) { this->nearDistance = nearDistance; }
@@ -42,10 +39,8 @@ public:
         setWidth(width);
         setHeight(height);
     }
-    void setSkybox(std::unique_ptr<Skybox> skybox) {
-        this->skybox = std::move(skybox);
-    }
-    Skybox *getSkybox() const { return skybox.get(); }
+    void setSkybox(std::unique_ptr<Skybox> skybox) { this->skybox = std::move(skybox); }
+    Skybox* getSkybox() const { return skybox.get(); }
 };
 
 #endif // CAMERA_HPP

@@ -4,9 +4,10 @@
 #include <vector>
 
 class MeshBuffer {
-public:
+  public:
     virtual ~MeshBuffer() = default;
-    virtual bool createBuffers(const std::vector<float>& vertices, const std::vector<float>& normals) = 0;
+    virtual bool createBuffers(const std::vector<float>& vertices,
+                               const std::vector<float>& normals) = 0;
     virtual void bind() = 0;
     virtual void unbind() = 0;
     virtual void destroy() = 0;

@@ -11,21 +11,21 @@
 #endif
 
 std::unique_ptr<ShaderCompiler> ShaderCompilerFactory::create(GraphicsAPI api, void* context) {
-    switch(api) {         
-        #ifdef PLATFORM_WEBGL
-        case GraphicsAPI::WEBGL:
-            return std::make_unique<WebGLShaderCompiler>(); 
-        #else
-        case GraphicsAPI::OPENGL:
-            return std::make_unique<OpenGLShaderCompiler>();
-        case GraphicsAPI::VULKAN:
-            return std::make_unique<VulkanShaderCompiler>(static_cast<VulkanRendererBackend*>(context));
-        #ifdef _WIN32
-        case GraphicsAPI::DIRECTX12:
-            return std::make_unique<D3D12ShaderCompiler>(static_cast<D3D12RendererBackend*>(context));
-        #endif
-        #endif
-        default:
-            return nullptr;
+    switch (api) {
+#ifdef PLATFORM_WEBGL
+    case GraphicsAPI::WEBGL:
+        return std::make_unique<WebGLShaderCompiler>();
+#else
+    case GraphicsAPI::OPENGL:
+        return std::make_unique<OpenGLShaderCompiler>();
+    case GraphicsAPI::VULKAN:
+        return std::make_unique<VulkanShaderCompiler>(static_cast<VulkanRendererBackend*>(context));
+#ifdef _WIN32
+    case GraphicsAPI::DIRECTX12:
+        return std::make_unique<D3D12ShaderCompiler>(static_cast<D3D12RendererBackend*>(context));
+#endif
+#endif
+    default:
+        return nullptr;
     }
 }

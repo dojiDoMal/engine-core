@@ -5,7 +5,8 @@
 
 class GameObjectManager {
     std::vector<GameObject*> objects;
-public:
+
+  public:
     ~GameObjectManager() {
         for (size_t i = 0; i < objects.size(); ++i) {
             delete objects[i];

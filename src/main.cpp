@@ -1,3 +1,6 @@
+#include "desktop_input.hpp"
+#include "engine_context.hpp"
+
 #ifdef _WIN32
 #include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
 #endif
@@ -26,16 +29,18 @@
 GraphicsAPI graphicsAPI = GraphicsAPI::WEBGL;
 #else
 // Escolha a API aqui: GraphicsAPI::OPENGL ou GraphicsAPI::VULKAN
-GraphicsAPI graphicsAPI = GraphicsAPI::OPENGL;
+GraphicsAPI graphicsAPI = GraphicsAPI::DIRECTX12;
 #endif
 
 Scene scene;
 GameObjectManager gameObjects;
 std::unique_ptr<WindowManager> screenManager;
 std::unique_ptr<SceneManager> sceneManager;
-std::unique_ptr<InputManager> inputManager;
 RendererBackend* rendererBackend = nullptr;
 WindowDesc winDesc;
+
+Yume::DesktopInput* inputMan = new Yume::DesktopInput();
+Yume::Context engine(inputMan);
 
 void init() {
     
@@ -55,13 +60,11 @@ void init() {
     sceneManager->addScene("cena2", "new_scene.scnb");
     sceneManager->loadScene("cena1");
 
-    inputManager = std::make_unique<InputManager>();
-
-    inputManager->bindKey(SDLK_ESCAPE, [&]() { 
-        inputManager->requestQuit(); 
+    engine.getInputSystem().bindKey(SDLK_ESCAPE, [&]() { 
+        engine.getInputSystem().requestQuit(); 
     });
     
-    inputManager->bindKey(SDLK_SPACE, [&]() {
+    engine.getInputSystem().bindKey(SDLK_SPACE, [&]() {
         sceneManager->loadScene("cena2");
     });
 }
@@ -91,9 +94,9 @@ void main_loop() {
     bool running = true;
     while (running) {
 
-        inputManager->processEvents();
-        
-        if (inputManager->getQuitEvent()) {
+        engine.getInputSystem().processEvents();
+
+        if (engine.getInputSystem().getQuitEvent()) {
             running = false;
         }
         

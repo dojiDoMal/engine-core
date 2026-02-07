@@ -1,6 +1,7 @@
-#include "input_manager.hpp"
+#include "desktop_input.hpp"
+#include <SDL_keycode.h>
 
-void InputManager::processEvents() {
+void Yume::DesktopInput::processEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
@@ -15,10 +16,15 @@ void InputManager::processEvents() {
     }
 }
 
-void InputManager::bindKey(SDL_Keycode key, ActionCallback callback) {
-    key_bindings[key] = callback;
+bool Yume::DesktopInput::getQuitEvent() { 
+  return quit_requested; 
+}
+  
+void Yume::DesktopInput::requestQuit() { 
+  quit_requested = true; 
 }
 
-bool InputManager::getQuitEvent() { return quit_requested; }
-
-void InputManager::requestQuit() { quit_requested = true; }
+void Yume::DesktopInput::bindKey(KeyCode key, ActionCallback callback) {
+    
+    key_bindings[key] = callback;
+}

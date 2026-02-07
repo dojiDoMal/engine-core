@@ -1,65 +1,64 @@
 #ifndef SCENE_FORMAT_HPP
 #define SCENE_FORMAT_HPP
 
-#include <cstdint>
 #include "color.hpp"
 #include "vector3.hpp"
-
+#include <cstdint>
 
 struct LightData {
-    uint8_t type;  // 0=DIRECTIONAL, 1=POINT, 2=SPOT
+    uint8_t type; // 0=DIRECTIONAL, 1=POINT, 2=SPOT
     Vector3 direction;
-    //float position[3];
+    // float position[3];
 };
 
 struct MaterialData {
-  char vertexShaderPath[256];
-  char fragmentShaderPath[256];
-  ColorRGBA color;
+    char vertexShaderPath[256];
+    char fragmentShaderPath[256];
+    ColorRGBA color;
 };
 
 struct SkyboxData {
-  char cubeMapTextures[6][256];
-  MaterialData material;
+    char cubeMapTextures[6][256];
+    MaterialData material;
 };
 
 struct SceneCameraData {
-  float background_color[4];
-  float fov;
-  float view_rect[2];
-  double position[3];
-  bool hasSkybox;
-  SkyboxData skybox;
+    float background_color[4];
+    float fov;
+    float view_rect[2];
+    double position[3];
+    bool hasSkybox;
+    SkyboxData skybox;
 };
 
 enum class ComponentType : uint8_t {
-  MESH_RENDERER = 0,
-  // Futuros: AUDIO_SOURCE, COLLIDER, RIGIDBODY, etc.
+    MESH_RENDERER = 0,
+    // Futuros: AUDIO_SOURCE, COLLIDER, RIGIDBODY, etc.
 };
 
 struct ComponentData {
-  ComponentType type;
-  union {
-    struct {
-      char objPath[256];
-      MaterialData material;
-      bool shadeSmooth;
-    } meshRenderer;
-  };
+    ComponentType type;
+    union {
+        struct {
+            char objPath[256];
+            MaterialData material;
+            bool shadeSmooth;
+        } meshRenderer;
+    };
 };
 
 struct GameObjectData {
-  uint8_t componentCount;
-  ComponentData components[8];
+    uint8_t componentCount;
+    ComponentData components[8];
 };
 
 struct CompiledScene {
-  uint32_t magic = 0x53434E45;
-  SceneCameraData camera;
-  uint32_t gameObjectCount;
-  GameObjectData gameObjects[32];
-  uint32_t lightCount;
-  LightData lights[32];
+    uint32_t magic = 0x53434E45;
+    SceneCameraData camera;
+    uint32_t gameObjectCount;
+    GameObjectData gameObjects[32];
+    uint32_t lightCount;
+    LightData lights[32];
 };
 
 #endif

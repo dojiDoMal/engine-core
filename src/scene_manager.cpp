@@ -1,8 +1,9 @@
 #define CLASS_NAME "SceneManager"
-#include "log_macros.hpp"
 #include "scene_manager.hpp"
+#include "log_macros.hpp"
 #include "renderer/renderer_backend.hpp"
 #include "scene_loader.hpp"
+
 
 SceneManager::~SceneManager() {
     if (activeScene != nullptr) {
@@ -34,7 +35,6 @@ void SceneManager::loadScene(const std::string& name) {
     activeScene->setLights(sceneLoader.loadLights(it->second));
     activeScene->setGameObjects(sceneLoader.loadGameObjects(it->second));
 }
-
 
 void SceneManager::setRendererBackend(RendererBackend& rendererBackend) {
     sceneLoader.setRendererBackend(rendererBackend);

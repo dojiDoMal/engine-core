@@ -3,19 +3,18 @@
 
 #include <string>
 
-class Asset
-{
-protected:
+class Asset {
+  protected:
     std::string path;
     bool loaded = false;
 
-public:
+  public:
     Asset(const std::string& assetPath) : path(assetPath) {}
     virtual ~Asset() = default;
-    
+
     virtual bool load() = 0;
     virtual void unload() = 0;
-    
+
     bool isLoaded() const { return loaded; }
     const std::string& getPath() const { return path; }
 };

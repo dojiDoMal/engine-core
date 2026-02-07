@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 class InputManager {
-public:
+  public:
     using ActionCallback = std::function<void()>;
 
     void processEvents();
@@ -14,7 +14,7 @@ public:
     bool getQuitEvent();
     void requestQuit();
 
-private:
+  private:
     bool quit_requested = false;
     std::unordered_map<SDL_Keycode, ActionCallback> key_bindings;
 };

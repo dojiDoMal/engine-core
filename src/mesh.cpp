@@ -7,21 +7,13 @@ bool Mesh::configure() {
     return result;
 }
 
-void Mesh::setVertices(const std::vector<float>& v) { 
-    vertices = v; 
-}
+void Mesh::setVertices(const std::vector<float>& v) { vertices = v; }
 
-const std::vector<float>& Mesh::getVertices() const { 
-    return vertices; 
-}
+const std::vector<float>& Mesh::getVertices() const { return vertices; }
 
-void Mesh::setNormals(const std::vector<float>& n) { 
-    normals = n; 
-}
+void Mesh::setNormals(const std::vector<float>& n) { normals = n; }
 
-const std::vector<float>& Mesh::getNormals() const { 
-    return normals; 
-}
+const std::vector<float>& Mesh::getNormals() const { return normals; }
 
 void Mesh::bind() {
     if (meshBuffer)
@@ -33,22 +25,12 @@ void Mesh::unbind() {
         meshBuffer->unbind();
 }
 
-void* Mesh::getHandle() const { 
-    return meshBuffer ? meshBuffer->getHandle() : nullptr; 
-}
+void* Mesh::getHandle() const { return meshBuffer ? meshBuffer->getHandle() : nullptr; }
 
-void* Mesh::getMeshHandle() const { 
-    return meshBuffer ? meshBuffer->getHandle() : nullptr; 
-}
+void* Mesh::getMeshHandle() const { return meshBuffer ? meshBuffer->getHandle() : nullptr; }
 
-void* Mesh::getMeshBufferHandle() const {
-    return meshBuffer ? meshBuffer->getHandle() : nullptr; 
-}
+void* Mesh::getMeshBufferHandle() const { return meshBuffer ? meshBuffer->getHandle() : nullptr; }
 
-MeshBuffer* Mesh::getMeshBuffer() const { 
-    return meshBuffer.get(); 
-}
+MeshBuffer* Mesh::getMeshBuffer() const { return meshBuffer.get(); }
 
-void Mesh::setMeshBuffer(std::unique_ptr<MeshBuffer> buffer) { 
-    meshBuffer = std::move(buffer); 
-}
+void Mesh::setMeshBuffer(std::unique_ptr<MeshBuffer> buffer) { meshBuffer = std::move(buffer); }

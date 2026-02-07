@@ -1,20 +1,21 @@
 #ifndef SKYBOX_HPP
 #define SKYBOX_HPP
 
-#include "mesh.hpp"
 #include "material.hpp"
+#include "mesh.hpp"
 #include <memory>
 
+
 class Skybox {
-private:
+  private:
     std::unique_ptr<Mesh> cubeMesh;
     std::unique_ptr<Material> skyboxMaterial;
     unsigned int textureID = 0;
-    
-public:
+
+  public:
     Skybox();
     ~Skybox() = default;
-    
+
     bool init();
     void setTextureID(unsigned int id) { textureID = id; }
     unsigned int getTextureID() const { return textureID; }

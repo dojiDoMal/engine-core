@@ -1,27 +1,27 @@
 #define CLASS_NAME "Material"
 #include "log_macros.hpp"
 
-#include "material.hpp"
 #include "color.hpp"
 #include "light.hpp"
+#include "material.hpp"
 
-Material::Material() {
-}
+
+Material::Material() {}
 
 bool Material::init() {
     if (!vertexShader || !fragmentShader || !shaderProgram) {
         return false;
     }
-    
+
     if (!vertexShader->load() || !fragmentShader->load()) {
         return false;
     }
-    
-    if (!shaderProgram->attachShader(*vertexShader) || 
+
+    if (!shaderProgram->attachShader(*vertexShader) ||
         !shaderProgram->attachShader(*fragmentShader)) {
         return false;
     }
-    
+
     if (!shaderProgram->link()) {
         return false;
     }
@@ -30,10 +30,10 @@ bool Material::init() {
     return true;
 }
 
-void Material::use() { 
-    if(shaderProgram) {
+void Material::use() {
+    if (shaderProgram) {
         shaderProgram->use();
-    } 
+    }
 }
 
 void Material::setBaseColor(const ColorRGBA color) {

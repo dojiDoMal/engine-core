@@ -15,7 +15,7 @@ class Scene {
     ~Scene();
     void setCamera(Camera* cam) { mainCamera = cam; };
     Camera* getCamera() const { return mainCamera; };
-    
+
     void setGameObjects(std::vector<GameObject*>* gos) { gameObjects = gos; };
     std::vector<GameObject*>* getGameObjects() { return gameObjects; };
     const std::vector<GameObject*>* getGameObjects() const { return gameObjects; };

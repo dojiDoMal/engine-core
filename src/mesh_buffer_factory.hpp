@@ -6,7 +6,7 @@
 #include <memory>
 
 class MeshBufferFactory {
-public:
+  public:
     static std::unique_ptr<MeshBuffer> create(GraphicsAPI api, void* context = nullptr);
 };
 

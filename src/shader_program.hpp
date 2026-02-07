@@ -6,7 +6,7 @@
 class ShaderAsset;
 
 class ShaderProgram {
-public:
+  public:
     virtual ~ShaderProgram() = default;
     virtual bool attachShader(const ShaderAsset& shader) = 0;
     virtual bool link() = 0;

@@ -1,12 +1,13 @@
 #ifndef SHADER_PROGRAM_FACTORY_HPP
 #define SHADER_PROGRAM_FACTORY_HPP
 
-#include "shader_program.hpp"
 #include "graphics_api.hpp"
+#include "shader_program.hpp"
 #include <memory>
 
+
 class ShaderProgramFactory {
-public:
+  public:
     static std::unique_ptr<ShaderProgram> create(GraphicsAPI api, void* context = nullptr);
 };
 

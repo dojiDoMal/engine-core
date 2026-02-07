@@ -1,11 +1,9 @@
 #define CLASS_NAME "ShaderAsset"
-#include "log_macros.hpp"
 #include "shader_asset.hpp"
-#include <fstream>
+#include "log_macros.hpp"
 
-ShaderAsset::ShaderAsset(const std::string& path, ShaderType type) 
-    : Asset(path), shaderType(type) {
-}
+ShaderAsset::ShaderAsset(const std::string& path, ShaderType type)
+    : Asset(path), shaderType(type) {}
 
 void ShaderAsset::setShaderCompiler(std::unique_ptr<ShaderCompiler> comp) {
     compiler = std::move(comp);
@@ -16,7 +14,7 @@ bool ShaderAsset::load() {
         loaded = true;
         return true;
     }
-    
+
     LOG_ERROR("Shader compilation failed for: " + getPath());
     return false;
 }

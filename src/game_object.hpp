@@ -5,13 +5,12 @@
 #include "mesh_renderer.hpp"
 #include <memory>
 
-class GameObject 
-{
-private:
+class GameObject {
+  private:
     std::unique_ptr<Mesh> mesh;
     std::unique_ptr<MeshRenderer> meshRenderer;
 
-public:
+  public:
     GameObject() = default;
     void setMesh(std::unique_ptr<Mesh> m) { mesh = std::move(m); };
     Mesh* getMesh() { return mesh.get(); }
