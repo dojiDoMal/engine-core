@@ -1,5 +1,6 @@
-#include "desktop_input.hpp"
+
 #include "engine_context.hpp"
+#include "input/i_input_factory.hpp"
 
 #ifdef _WIN32
 #include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
@@ -14,7 +15,6 @@
 #include "window/window_manager.hpp"
 #include "logger.hpp"
 #include <SDL2/SDL_keycode.h>
-#include "input_manager.hpp"
 
 #ifndef PLATFORM_WEBGL
 #include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
@@ -39,7 +39,7 @@ std::unique_ptr<SceneManager> sceneManager;
 RendererBackend* rendererBackend = nullptr;
 WindowDesc winDesc;
 
-Yume::DesktopInput* inputMan = new Yume::DesktopInput();
+auto inputMan = Yume::IInputFactory::create();
 Yume::Context engine(inputMan);
 
 void init() {

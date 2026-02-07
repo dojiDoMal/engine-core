@@ -1,7 +1,7 @@
 #ifndef ENGINE_CONTEXT_HPP
 #define ENGINE_CONTEXT_HPP
 
-#include "i_input.hpp"
+#include "input/i_input.hpp"
 
 namespace Yume {
 class Context {
