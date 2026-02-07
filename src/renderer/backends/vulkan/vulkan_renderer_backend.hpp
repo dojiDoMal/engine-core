@@ -69,6 +69,9 @@ private:
     
 public:
     ~VulkanRendererBackend();
+
+    unsigned int loadTexture(const std::string& path) override;
+    void drawSprite(const Sprite& sprite) override;
     bool init() override;
     bool initWindowContext() override;
     void bindCamera(Camera* camera) override {return;};

@@ -13,7 +13,6 @@
 #include "skybox.hpp"
 #include <fstream>
 
-
 SceneLoader::SceneLoader() : rendererBackend(nullptr) {}
 
 void SceneLoader::setRendererBackend(RendererBackend& backend) { rendererBackend = &backend; }
@@ -205,6 +204,39 @@ std::vector<GameObject*>* SceneLoader::loadGameObjects(const std::string& filepa
 
                 gameObject->setMesh(std::move(mesh));
                 gameObject->setMeshRenderer(std::move(meshRenderer));
+            } else if (comp.type == ComponentType::SPRITE_RENDERER) {
+                auto& spriteData = comp.spriteRenderer;
+
+                auto sprite = std::make_unique<Sprite>(spriteData.width, spriteData.height);
+                unsigned int texID = rendererBackend->loadTexture(spriteData.texturePath);
+                sprite->setTexture(texID);
+
+                auto shaderExt = rendererBackend->getShaderExtension();
+                auto vertexShader = std::make_unique<ShaderAsset>(
+                    spriteData.material.vertexShaderPath + shaderExt, ShaderType::VERTEX);
+                vertexShader->setShaderCompiler(rendererBackend->createShaderCompiler());
+
+                auto fragmentShader = std::make_unique<ShaderAsset>(
+                    spriteData.material.fragmentShaderPath + shaderExt, ShaderType::FRAGMENT);
+                fragmentShader->setShaderCompiler(rendererBackend->createShaderCompiler());
+
+                auto material = std::make_unique<Material>();
+                material->setShaderProgram(rendererBackend->createShaderProgram());
+                material->setVertexShader(std::move(vertexShader));
+                material->setFragmentShader(std::move(fragmentShader));
+                material->setBaseColor(spriteData.material.color);
+
+                if (!material->init()) {
+                    LOG_ERROR("Material init failed for sprite: " +
+                              std::string(spriteData.texturePath));
+                    continue;
+                }
+
+                auto spriteRenderer = std::make_unique<SpriteRenderer>();
+                spriteRenderer->setMaterial(std::move(material));
+
+                gameObject->setSprite(std::move(sprite));
+                gameObject->setSpriteRenderer(std::move(spriteRenderer));
             }
         }
 

@@ -42,6 +42,9 @@ private:
     
 public:
     ~D3D12RendererBackend();
+
+    unsigned int loadTexture(const std::string& path) override;
+    void drawSprite(const Sprite& sprite) override;
     bool init() override;
     bool initWindowContext() override;
     void bindCamera(Camera* camera) override;

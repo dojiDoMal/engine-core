@@ -2,10 +2,6 @@
 #include "engine_context.hpp"
 #include "input/i_input_factory.hpp"
 
-#ifdef _WIN32
-#include "renderer/backends/directx12/d3d12_renderer_backend.hpp"
-#endif
-
 #include "scene.hpp"
 #include "scene_manager.hpp"
 #include "stb_image_header.hpp"
@@ -16,10 +12,6 @@
 #include "logger.hpp"
 #include <SDL2/SDL_keycode.h>
 
-#ifndef PLATFORM_WEBGL
-#include "renderer/backends/vulkan/vulkan_renderer_backend.hpp"
-#endif
-
 #include <cstdio>
 #include <memory>
 
@@ -29,7 +21,7 @@
 GraphicsAPI graphicsAPI = GraphicsAPI::WEBGL;
 #else
 // Escolha a API aqui: GraphicsAPI::OPENGL ou GraphicsAPI::VULKAN
-GraphicsAPI graphicsAPI = GraphicsAPI::DIRECTX12;
+GraphicsAPI graphicsAPI = GraphicsAPI::OPENGL;
 #endif
 
 Scene scene;
@@ -56,16 +48,11 @@ void init() {
 
     sceneManager = std::make_unique<SceneManager>();
     sceneManager->setRendererBackend(*rendererBackend);
-    sceneManager->addScene("cena1", "scene.scnb");
-    sceneManager->addScene("cena2", "new_scene.scnb");
+    sceneManager->addScene("cena1", "scene_with_sprite.scnb");
     sceneManager->loadScene("cena1");
 
     engine.getInputSystem().bindKey(SDLK_ESCAPE, [&]() { 
         engine.getInputSystem().requestQuit(); 
-    });
-    
-    engine.getInputSystem().bindKey(SDLK_SPACE, [&]() {
-        sceneManager->loadScene("cena2");
     });
 }
 

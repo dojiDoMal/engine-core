@@ -116,6 +116,34 @@ int main(int argc, char* argv[]) {
 
                         goData.components[j].meshRenderer.material.color = {color[0], color[1],
                                                                             color[2], color[3]};
+                    } else if (type == "SPRITE_RENDERER") {
+                        goData.components[j].type = ComponentType::SPRITE_RENDERER;
+
+                        std::string texPath = comp["texturePath"];
+                        std::string vertPath = comp["material"]["vertexShaderPath"];
+                        std::string fragPath = comp["material"]["fragmentShaderPath"];
+                        std::array<float, 4> color = comp["material"]["color"];
+                        float width = comp.value("width", 1.0f);
+                        float height = comp.value("height", 1.0f);
+
+                        std::snprintf(goData.components[j].spriteRenderer.texturePath,
+                                      sizeof(goData.components[j].spriteRenderer.texturePath), "%s",
+                                      texPath.c_str());
+
+                        std::snprintf(
+                            goData.components[j].spriteRenderer.material.vertexShaderPath,
+                            sizeof(goData.components[j].spriteRenderer.material.vertexShaderPath),
+                            "%s", vertPath.c_str());
+
+                        std::snprintf(
+                            goData.components[j].spriteRenderer.material.fragmentShaderPath,
+                            sizeof(goData.components[j].spriteRenderer.material.fragmentShaderPath),
+                            "%s", fragPath.c_str());
+
+                        goData.components[j].spriteRenderer.material.color = {color[0], color[1],
+                                                                              color[2], color[3]};
+                        goData.components[j].spriteRenderer.width = width;
+                        goData.components[j].spriteRenderer.height = height;
                     }
                 }
             }

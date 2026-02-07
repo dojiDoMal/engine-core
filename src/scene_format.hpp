@@ -33,6 +33,7 @@ struct SceneCameraData {
 
 enum class ComponentType : uint8_t {
     MESH_RENDERER = 0,
+    SPRITE_RENDERER = 1,
     // Futuros: AUDIO_SOURCE, COLLIDER, RIGIDBODY, etc.
 };
 
@@ -44,6 +45,13 @@ struct ComponentData {
             MaterialData material;
             bool shadeSmooth;
         } meshRenderer;
+        
+        struct {
+            char texturePath[256];
+            MaterialData material;
+            float width;
+            float height;
+        } spriteRenderer;
     };
 };
 

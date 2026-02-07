@@ -1,21 +1,20 @@
 #define CLASS_NAME "OpenGLRendererBackend"
 #include "../../../log_macros.hpp"
 
-#include "mesh_buffer_factory.hpp"
-#include "shader_compiler_factory.hpp"
-#include "shader_program_factory.hpp"
 #include "../../../color.hpp"
 #include "../../../game_object.hpp"
 #include "../../../material.hpp"
 #include "../../../mesh_renderer.hpp"
 #include "../../../stb_image.h"
+#include "mesh_buffer_factory.hpp"
 #include "open_gl_renderer_backend.hpp"
+#include "shader_compiler_factory.hpp"
+#include "shader_program_factory.hpp"
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 
 GraphicsAPI OpenGLRendererBackend::getGraphicsAPI() const { return GraphicsAPI::OPENGL; }
 
@@ -24,6 +23,8 @@ std::string OpenGLRendererBackend::getShaderExtension() const { return ".glsl"; 
 OpenGLRendererBackend::~OpenGLRendererBackend() {
     if (matricesUBO)
         glDeleteBuffers(1, &matricesUBO);
+    if (materialDataUBO)
+        glDeleteBuffers(1, &materialDataUBO);
     if (lightDataUBO)
         glDeleteBuffers(1, &lightDataUBO);
 }
@@ -57,8 +58,6 @@ bool OpenGLRendererBackend::init(SDL_Window* window) {
     return init();
 };
 
-void OpenGLRendererBackend::onCameraSet() {}
-
 bool OpenGLRendererBackend::init() {
     GLenum err = glewInit();
     if (GLEW_OK != err) {
@@ -68,11 +67,18 @@ bool OpenGLRendererBackend::init() {
     }
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glGenBuffers(1, &matricesUBO);
     glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
     glBufferData(GL_UNIFORM_BUFFER, 4 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, matricesUBO);
+
+    glGenBuffers(1, &materialDataUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, materialDataUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec4), nullptr, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, materialDataUBO);
 
     glGenBuffers(1, &lightDataUBO);
     glBindBuffer(GL_UNIFORM_BUFFER, lightDataUBO);
@@ -82,10 +88,15 @@ bool OpenGLRendererBackend::init() {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     uniformBindings["ModelViewProjection"] = matricesUBO;
+    uniformBindings["MaterialData"] = materialDataUBO;
     uniformBindings["LightData"] = lightDataUBO;
+
+    initSpriteQuad();
 
     return true;
 }
+
+void OpenGLRendererBackend::onCameraSet() {}
 
 void OpenGLRendererBackend::clear(Camera* camera) {
     ColorRGBA bgColor = camera ? camera->getBackgroundColor() : COLOR::BLACK;
@@ -122,8 +133,8 @@ void OpenGLRendererBackend::bindCamera(Camera* camera) {
         return;
     }
 
-    glm::mat4 model =
-        glm::rotate(glm::mat4(1.0f), SDL_GetTicks() / 1000.0f, glm::vec3(0.5f, 1.0f, 0.0f));
+    glm::mat4 model = glm::mat4(1.0f);
+        //glm::rotate(glm::mat4(1.0f), SDL_GetTicks() / 1000.0f, glm::vec3(0.5f, 1.0f, 0.0f));
 
     auto& camPos = camera->getPosition();
     glm::mat4 view = glm::lookAt({camPos.x, camPos.y, camPos.z}, glm::vec3(0.0f, 0.0f, 0.0f),
@@ -163,34 +174,33 @@ void OpenGLRendererBackend::applyMaterial(Material* material) {
 void OpenGLRendererBackend::renderGameObjects(std::vector<GameObject*>* gameObjects,
                                               std::vector<Light>* lights) {
     for (const auto go : *gameObjects) {
-        auto mesh = go->getMesh();
-        if (!mesh) {
-            LOG_INFO("Mesh is null!");
-            continue;
+        if (go->hasSprite() && go->hasSpriteRenderer()) {
+            auto sprite = go->getSprite();
+            auto spriteRenderer = go->getSpriteRenderer();
+            auto mat = spriteRenderer->getMaterial();
+            
+            if (mat) {
+                mat->use();
+                applyMaterial(mat);
+                drawSprite(*sprite);
+            }
+        } else if (go->hasMesh() && go->hasMeshRenderer()) {
+            auto mesh = go->getMesh();
+            auto meshRenderer = go->getMeshRenderer();
+            auto mat = meshRenderer->getMaterial();
+            
+            if (mat) {
+                mat->use();
+                applyMaterial(mat);
+                if (lights && !lights->empty()) {
+                    mat->applyLight((*lights)[0]);
+                }
+                draw(*mesh);
+            }
         }
-
-        auto meshRenderer = go->getMeshRenderer();
-        if (!meshRenderer) {
-            LOG_INFO("MeshRenderer is null!");
-            continue;
-        }
-
-        auto mat = meshRenderer->getMaterial();
-        if (!mat) {
-            LOG_INFO("Material is null!");
-            continue;
-        }
-
-        mat->use();
-        applyMaterial(mat);
-
-        if (lights && !lights->empty()) {
-            mat->applyLight((*lights)[0]);
-        }
-
-        draw(*mesh);
     }
 }
+
 
 unsigned int OpenGLRendererBackend::createCubemapTexture(const std::vector<std::string>& faces) {
     unsigned int textureID;
@@ -259,6 +269,90 @@ void OpenGLRendererBackend::renderSkybox(const Mesh& mesh, unsigned int shaderPr
     glDepthFunc(GL_LESS);
 }
 
-void OpenGLRendererBackend::present(SDL_Window* window) {
-    SDL_GL_SwapWindow(window);
+void OpenGLRendererBackend::present(SDL_Window* window) { SDL_GL_SwapWindow(window); }
+
+void OpenGLRendererBackend::initSpriteQuad() {
+    float vertices[] = {-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.0f,
+                        0.5f,  0.5f,  0.0f, 1.0f, 1.0f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+                        0.5f,  0.5f,  0.0f, 1.0f, 1.0f, -0.5f, 0.5f,  0.0f, 0.0f, 1.0f};
+
+    glGenVertexArrays(1, &spriteVAO);
+    glGenBuffers(1, &spriteVBO);
+
+    glBindVertexArray(spriteVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, spriteVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
 }
+
+unsigned int OpenGLRendererBackend::loadTexture(const std::string& path) {
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+
+    if (data) {
+        LOG_INFO("Texture loaded: " + path + " (" + std::to_string(width) + "x" + std::to_string(height) + ", " + std::to_string(nrChannels) + " channels)");
+        GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    } else {
+        LOG_ERROR("Failed to load texture: " + path);
+    }
+
+    return textureID;
+}
+
+
+void OpenGLRendererBackend::drawSprite(const Sprite& sprite) {
+    LOG_INFO("Drawing sprite - TextureID: " + std::to_string(sprite.getTexture()) + 
+             " Width: " + std::to_string(sprite.getWidth()) + 
+             " Height: " + std::to_string(sprite.getHeight()));
+    
+    
+    glDisable(GL_DEPTH_TEST);
+    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(sprite.getWidth(), sprite.getHeight(), 1.0f));
+    
+    glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(model));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, sprite.getTexture());
+    
+    GLint currentProgram;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+    GLint texLoc = glGetUniformLocation(currentProgram, "SPIRV_Cross_CombinedspriteTexturespriteSampler");
+    LOG_INFO("Texture uniform location: " + std::to_string(texLoc));
+    if (texLoc != -1) {
+        glUniform1i(texLoc, 0);
+    }
+    
+    glBindVertexArray(spriteVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        LOG_ERROR("OpenGL error in drawSprite: " + std::to_string(err));
+    }
+
+    glEnable(GL_DEPTH_TEST);
+}
+
+
