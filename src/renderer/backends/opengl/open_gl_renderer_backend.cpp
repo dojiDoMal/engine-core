@@ -290,7 +290,7 @@ void OpenGLRendererBackend::initSpriteQuad() {
     glBindVertexArray(0);
 }
 
-unsigned int OpenGLRendererBackend::loadTexture(const std::string& path) {
+unsigned int OpenGLRendererBackend::loadTexture(const std::string& path, uint8_t filterType) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
@@ -300,20 +300,17 @@ unsigned int OpenGLRendererBackend::loadTexture(const std::string& path) {
     if (data) {
         LOG_INFO("Texture loaded: " + path + " (" + std::to_string(width) + "x" +
                  std::to_string(height) + ", " + std::to_string(nrChannels) + " channels)");
+
         GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
         glBindTexture(GL_TEXTURE_2D, textureID);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        
-        //glGenerateMipmap(GL_TEXTURE_2D);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        GLenum filter = (filterType == 1) ? GL_LINEAR : GL_NEAREST;
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 
         stbi_image_free(data);
     } else {

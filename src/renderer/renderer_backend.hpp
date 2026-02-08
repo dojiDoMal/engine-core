@@ -21,7 +21,7 @@ class RendererBackend {
   public:
     virtual ~RendererBackend() = default;
 
-    virtual unsigned int loadTexture(const std::string& path) = 0;
+    virtual unsigned int loadTexture(const std::string& path, uint8_t filterType = 0) = 0;
     virtual void drawSprite(const Sprite& sprite) = 0;
     virtual bool init() = 0;
     virtual bool init(SDL_Window* window) = 0;

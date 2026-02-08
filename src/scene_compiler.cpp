@@ -6,6 +6,9 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 using json = nlohmann::json;
 
 int main(int argc, char* argv[]) {
@@ -92,16 +95,16 @@ int main(int argc, char* argv[]) {
                     if (type == "MESH_RENDERER") {
                         goData.components[j].type = ComponentType::MESH_RENDERER;
 
-                        std::string objPath = comp["objPath"];
+                        std::string objPath = comp["mesh"]["path"];
                         std::string vertPath = comp["material"]["vertexShaderPath"];
                         std::string fragPath = comp["material"]["fragmentShaderPath"];
                         std::array<float, 4> color = comp["material"]["color"];
 
-                        bool shadeSmooth = comp.value("shadeSmooth", true);
-                        goData.components[j].meshRenderer.shadeSmooth = shadeSmooth;
+                        bool shadeSmooth = comp["mesh"].value("shadeSmooth", true);
+                        goData.components[j].meshRenderer.mesh.shadeSmooth = shadeSmooth;
 
-                        std::snprintf(goData.components[j].meshRenderer.objPath,
-                                      sizeof(goData.components[j].meshRenderer.objPath), "%s",
+                        std::snprintf(goData.components[j].meshRenderer.mesh.path,
+                                      sizeof(goData.components[j].meshRenderer.mesh.path), "%s",
                                       objPath.c_str());
 
                         std::snprintf(
@@ -119,16 +122,31 @@ int main(int argc, char* argv[]) {
                     } else if (type == "SPRITE_RENDERER") {
                         goData.components[j].type = ComponentType::SPRITE_RENDERER;
 
-                        std::string texPath = comp["texturePath"];
+                        std::string texPath = comp["texture"]["path"];
+                        float scaleFactor = comp["texture"].value("scaleFactor", 1.0f);
+                        std::string filter = comp["texture"].value("filterType", "NEAREST");
+
                         std::string vertPath = comp["material"]["vertexShaderPath"];
                         std::string fragPath = comp["material"]["fragmentShaderPath"];
                         std::array<float, 4> color = comp["material"]["color"];
-                        float width = comp.value("width", 1.0f);
-                        float height = comp.value("height", 1.0f);
 
-                        std::snprintf(goData.components[j].spriteRenderer.texturePath,
-                                      sizeof(goData.components[j].spriteRenderer.texturePath), "%s",
-                                      texPath.c_str());
+                        int width, height, channels;
+                        if (!stbi_info(texPath.c_str(), &width, &height, &channels)) {
+                            std::cerr << "Failed to read texture info: " << texPath << std::endl;
+                            width = height = 1;
+                        }
+
+                        std::snprintf(goData.components[j].spriteRenderer.texture.path,
+                                      sizeof(goData.components[j].spriteRenderer.texture.path),
+                                      "%s", texPath.c_str());
+
+                        goData.components[j].spriteRenderer.texture.width =
+                            static_cast<float>(width);
+                        goData.components[j].spriteRenderer.texture.height =
+                            static_cast<float>(height);
+                        goData.components[j].spriteRenderer.texture.scaleFactor = scaleFactor;
+                        goData.components[j].spriteRenderer.texture.filterType =
+                            (filter == "LINEAR") ? 1 : 0;
 
                         std::snprintf(
                             goData.components[j].spriteRenderer.material.vertexShaderPath,
@@ -142,8 +160,6 @@ int main(int argc, char* argv[]) {
 
                         goData.components[j].spriteRenderer.material.color = {color[0], color[1],
                                                                               color[2], color[3]};
-                        goData.components[j].spriteRenderer.width = width;
-                        goData.components[j].spriteRenderer.height = height;
                     }
                 }
             }

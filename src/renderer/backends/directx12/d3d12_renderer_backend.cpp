@@ -448,6 +448,6 @@ void D3D12RendererBackend::renderGameObjects(std::vector<GameObject*>* gameObjec
     }
 }
 
-unsigned int D3D12RendererBackend::loadTexture(const std::string& path) { return 0; };
+unsigned int D3D12RendererBackend::loadTexture(const std::string& path, uint8_t filterType) { return 0; };
     
 void D3D12RendererBackend::drawSprite(const Sprite& sprite) {};

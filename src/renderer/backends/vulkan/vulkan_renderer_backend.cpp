@@ -814,6 +814,6 @@ void VulkanRendererBackend::present(SDL_Window* window) {
     vkQueuePresentKHR(presentQueue, &presentInfo);
 }
 
-unsigned int VulkanRendererBackend::loadTexture(const std::string& path) { return 0; };
+unsigned int VulkanRendererBackend::loadTexture(const std::string& path, uint8_t filterType) { return 0; };
     
 void VulkanRendererBackend::drawSprite(const Sprite& sprite) {};

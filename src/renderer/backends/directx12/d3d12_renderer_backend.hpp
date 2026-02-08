@@ -43,7 +43,7 @@ private:
 public:
     ~D3D12RendererBackend();
 
-    unsigned int loadTexture(const std::string& path) override;
+    unsigned int loadTexture(const std::string& path, uint8_t filterType = 0) override;
     void drawSprite(const Sprite& sprite) override;
     bool init() override;
     bool initWindowContext() override;

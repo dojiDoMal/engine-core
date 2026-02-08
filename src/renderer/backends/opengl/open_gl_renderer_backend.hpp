@@ -24,7 +24,7 @@ class OpenGLRendererBackend : public RendererBackend {
   public:
     ~OpenGLRendererBackend();
 
-    unsigned int loadTexture(const std::string& path) override;
+    unsigned int loadTexture(const std::string& path, uint8_t filterType = 0) override;
     void drawSprite(const Sprite& sprite) override;
     bool init() override;
     void present(SDL_Window* window) override;

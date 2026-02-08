@@ -17,6 +17,19 @@ struct MaterialData {
     ColorRGBA color;
 };
 
+struct TextureData {
+    char path[256];
+    float width;
+    float height;
+    float scaleFactor;
+    uint8_t filterType; // 0=NEAREST, 1=LINEAR
+};
+
+struct MeshData {
+    char path[256];
+    bool shadeSmooth;
+};
+
 struct SkyboxData {
     char cubeMapTextures[6][256];
     MaterialData material;
@@ -41,16 +54,13 @@ struct ComponentData {
     ComponentType type;
     union {
         struct {
-            char objPath[256];
+            MeshData mesh;
             MaterialData material;
-            bool shadeSmooth;
         } meshRenderer;
         
         struct {
-            char texturePath[256];
             MaterialData material;
-            float width;
-            float height;
+            TextureData texture;
         } spriteRenderer;
     };
 };
