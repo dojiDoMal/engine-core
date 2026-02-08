@@ -26,6 +26,8 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < 3; i++)
         scene.camera.position[i] = cam["position"][i];
 
+    scene.camera.orthographic = cam.value("orthographic", false);
+
     if (cam.contains("skybox")) {
         scene.camera.hasSkybox = true;
 

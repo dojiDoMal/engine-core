@@ -15,32 +15,33 @@ class Camera {
     float farDistance = 100.0f;
     float width = 800.0f;
     float height = 600.0f;
+    bool orthographic = false;
 
   public:
     Camera() = default;
     ~Camera() = default;
 
-    const Vector3& getPosition() const { return position; }
-    void setPosition(const Vector3& position) { this->position = position; }
-    ColorRGBA& getBackgroundColor() { return backgroundColor; }
-    void setBackgroundColor(const ColorRGBA& color) { this->backgroundColor = color; }
-    void setFov(float fov) { this->fov = fov; }
-    float getFov() const { return fov; }
-    void setNearDistance(float nearDistance) { this->nearDistance = nearDistance; }
-    float getNearDistance() const { return nearDistance; }
-    void setFarDistance(float farDistance) { this->farDistance = farDistance; }
-    float getFarDistance() const { return farDistance; }
-    void setWidth(float width) { this->width = width; }
-    float getWidth() const { return width; }
-    void setHeight(float height) { this->height = height; }
-    float getHeight() const { return height; }
-    float getAspectRatio() const { return width / height; }
-    void setViewRect(float width, float height) {
-        setWidth(width);
-        setHeight(height);
-    }
-    void setSkybox(std::unique_ptr<Skybox> skybox) { this->skybox = std::move(skybox); }
-    Skybox* getSkybox() const { return skybox.get(); }
+    const Vector3& getPosition() const;
+    void setPosition(const Vector3& position);
+    ColorRGBA& getBackgroundColor();
+    void setBackgroundColor(const ColorRGBA& color);
+    void setFov(float fov);
+    float getFov() const;
+    void setNearDistance(float nearDistance);
+    float getNearDistance() const;
+    void setFarDistance(float farDistance);
+    float getFarDistance() const;
+    void setWidth(float width);
+    float getWidth() const;
+    void setHeight(float height);
+    float getHeight() const;
+    float getAspectRatio() const;
+    
+    void setSkybox(std::unique_ptr<Skybox> skybox);
+    Skybox* getSkybox() const;
+    void setOrthographic(bool ortho);
+    bool isOrthographic() const;
+    void setViewRect(float width, float height);
 };
 
 #endif // CAMERA_HPP

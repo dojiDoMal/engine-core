@@ -40,6 +40,7 @@ struct SceneCameraData {
     float fov;
     float view_rect[2];
     double position[3];
+    bool orthographic;
     bool hasSkybox;
     SkyboxData skybox;
 };

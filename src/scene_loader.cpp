@@ -119,6 +119,7 @@ Camera* SceneLoader::loadCamera(const std::string& filepath) {
     camera->setFov(cam.fov);
     camera->setViewRect(cam.view_rect[0], cam.view_rect[1]);
     camera->setPosition({(float)cam.position[0], (float)cam.position[1], (float)cam.position[2]});
+    camera->setOrthographic(cam.orthographic);
 
     if (cam.hasSkybox) {
         auto skybox = std::make_unique<Skybox>();
@@ -211,8 +212,8 @@ std::vector<GameObject*>* SceneLoader::loadGameObjects(const std::string& filepa
                 auto& textureData = comp.spriteRenderer.texture;
                 auto& materialData = comp.spriteRenderer.material;
 
-                float width = textureData.width / textureData.scaleFactor;
-                float height = textureData.height / textureData.scaleFactor;
+                float width = textureData.width * textureData.scaleFactor;
+                float height = textureData.height * textureData.scaleFactor;
                 auto sprite = std::make_unique<Sprite>(width, height);
 
                 unsigned int texID =

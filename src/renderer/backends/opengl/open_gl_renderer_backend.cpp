@@ -140,10 +140,17 @@ void OpenGLRendererBackend::bindCamera(Camera* camera) {
     glm::mat4 view = glm::lookAt({camPos.x, camPos.y, camPos.z}, glm::vec3(0.0f, 0.0f, 0.0f),
                                  glm::vec3(0.0f, 1.0f, 0.0f));
 
-    glm::mat4 projection =
-        glm::perspective(glm::radians(camera->getFov()), camera->getAspectRatio(),
-                         camera->getNearDistance(), camera->getFarDistance());
-
+    glm::mat4 projection;
+    if (camera->isOrthographic()) {
+        float halfWidth = camera->getWidth() / 2.0f;
+        float halfHeight = camera->getHeight() / 2.0f;
+        projection = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, 
+                               camera->getNearDistance(), camera->getFarDistance());
+    } else {
+        projection = glm::perspective(glm::radians(camera->getFov()), camera->getAspectRatio(),
+                                     camera->getNearDistance(), camera->getFarDistance());
+    }
+    
     glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(model));
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
