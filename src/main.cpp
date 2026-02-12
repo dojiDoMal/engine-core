@@ -7,11 +7,13 @@
 #include "stb_image_header.hpp"
 
 #include "game_object_manager.hpp"
+#include "vector3.hpp"
 #include "window/window_desc.hpp"
 #include "window/window_manager.hpp"
 #include "logger.hpp"
 #include <SDL2/SDL_keycode.h>
 
+#include <cmath>
 #include <cstdio>
 #include <memory>
 
@@ -49,10 +51,15 @@ void init() {
     sceneManager = std::make_unique<SceneManager>();
     sceneManager->setRendererBackend(*rendererBackend);
     sceneManager->addScene("cena1", "scene_with_sprite.scnb");
-    sceneManager->loadScene("cena1");
+    sceneManager->addScene("cena2", "scene.scnb");
+    sceneManager->loadScene("cena2");
 
     engine.getInputSystem().bindKey(SDLK_ESCAPE, [&]() { 
         engine.getInputSystem().requestQuit(); 
+    });
+
+    engine.getInputSystem().bindKey(SDLK_SPACE, [&]() { 
+        sceneManager->loadScene("cena2");
     });
 }
 
@@ -78,6 +85,8 @@ void main_loop() {
 #else
 void main_loop() {
 
+    float x = 0.0f, y = 0.0f, z = 0.0f;
+
     bool running = true;
     while (running) {
 
@@ -86,6 +95,11 @@ void main_loop() {
         if (engine.getInputSystem().getQuitEvent()) {
             running = false;
         }
+
+        x += 0.001f;
+        y += 0.004f;
+
+        (*sceneManager->getActiveScene()->getGameObjects())[0]->getTransform()->setPosition({sin(x),cos(y),z});
         
         screenManager->render(*sceneManager->getActiveScene());
 

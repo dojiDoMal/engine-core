@@ -134,7 +134,6 @@ void OpenGLRendererBackend::bindCamera(Camera* camera) {
     }
 
     glm::mat4 model = glm::mat4(1.0f);
-    // glm::rotate(glm::mat4(1.0f), SDL_GetTicks() / 1000.0f, glm::vec3(0.5f, 1.0f, 0.0f));
 
     auto& camPos = camera->getPosition();
     glm::mat4 view = glm::lookAt({camPos.x, camPos.y, camPos.z}, glm::vec3(0.0f, 0.0f, 0.0f),
@@ -142,15 +141,17 @@ void OpenGLRendererBackend::bindCamera(Camera* camera) {
 
     glm::mat4 projection;
     if (camera->isOrthographic()) {
-        float halfWidth = camera->getWidth() / 2.0f;
-        float halfHeight = camera->getHeight() / 2.0f;
-        projection = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, 
-                               camera->getNearDistance(), camera->getFarDistance());
+        float orthoSize = camera->getOrthoSize();
+        float aspect = camera->getAspectRatio();
+        LOG_INFO("Ortho projection - size: " + std::to_string(orthoSize) +
+                 " aspect: " + std::to_string(aspect));
+        projection = glm::ortho(-orthoSize * aspect, orthoSize * aspect, -orthoSize, orthoSize,
+                                camera->getNearDistance(), camera->getFarDistance());
     } else {
         projection = glm::perspective(glm::radians(camera->getFov()), camera->getAspectRatio(),
-                                     camera->getNearDistance(), camera->getFarDistance());
+                                      camera->getNearDistance(), camera->getFarDistance());
     }
-    
+
     glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(model));
     glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
@@ -181,6 +182,16 @@ void OpenGLRendererBackend::applyMaterial(Material* material) {
 void OpenGLRendererBackend::renderGameObjects(std::vector<GameObject*>* gameObjects,
                                               std::vector<Light>* lights) {
     for (const auto go : *gameObjects) {
+
+        glm::mat4 model = glm::mat4(1.0f);
+        if (go->getTransform()) {
+            model = go->getTransform()->getModelMatrix();
+        }
+
+        glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(model));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
         if (go->hasSprite() && go->hasSpriteRenderer()) {
             auto sprite = go->getSprite();
             auto spriteRenderer = go->getSpriteRenderer();
@@ -331,11 +342,19 @@ void OpenGLRendererBackend::drawSprite(const Sprite& sprite) {
     LOG_INFO("Drawing sprite - TextureID: " + std::to_string(sprite.getTexture()) + " Width: " +
              std::to_string(sprite.getWidth()) + " Height: " + std::to_string(sprite.getHeight()));
 
-    glm::mat4 model =
+    // Não sobrescrever a matriz model, apenas aplicar a escala do sprite
+    // A matriz model já foi configurada em renderGameObjects com o Transform
+    glm::mat4 spriteScale =
         glm::scale(glm::mat4(1.0f), glm::vec3(sprite.getWidth(), sprite.getHeight(), 1.0f));
 
+    glm::mat4 currentModel;
     glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(model));
+    glGetBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(currentModel));
+
+    // Multiplicar: transform * escala do sprite
+    glm::mat4 finalModel = currentModel * spriteScale;
+
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(finalModel));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glActiveTexture(GL_TEXTURE0);

@@ -13,16 +13,16 @@ class Scene {
 
   public:
     ~Scene();
-    void setCamera(Camera* cam) { mainCamera = cam; };
-    Camera* getCamera() const { return mainCamera; };
+    void setCamera(Camera* cam);
+    Camera* getCamera() const;
 
-    void setGameObjects(std::vector<GameObject*>* gos) { gameObjects = gos; };
-    std::vector<GameObject*>* getGameObjects() { return gameObjects; };
-    const std::vector<GameObject*>* getGameObjects() const { return gameObjects; };
+    void setGameObjects(std::vector<GameObject*>* gos);
+    std::vector<GameObject*>* getGameObjects();
+    const std::vector<GameObject*>* getGameObjects() const;
 
-    void setLights(std::vector<Light>* l) { lights = l; };
-    std::vector<Light>* getLights() { return lights; };
-    const std::vector<Light>* getLights() const { return lights; };
+    void setLights(std::vector<Light>* l);
+    std::vector<Light>* getLights();
+    const std::vector<Light>* getLights() const;
 };
 
 #endif

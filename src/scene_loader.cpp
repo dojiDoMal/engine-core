@@ -14,10 +14,111 @@
 #include "stb_image.h"
 #include <fstream>
 
-
 SceneLoader::SceneLoader() : rendererBackend(nullptr) {}
 
 void SceneLoader::setRendererBackend(RendererBackend& backend) { rendererBackend = &backend; }
+
+CompiledScene* SceneLoader::loadCompiledScene(const std::string& filepath) {
+    if (!validateSceneFile(filepath))
+        return nullptr;
+
+    std::ifstream file(filepath, std::ios::binary);
+    auto scene = new CompiledScene();
+    if (!file.read(reinterpret_cast<char*>(scene), sizeof(CompiledScene))) {
+        LOG_ERROR("Failed to read scene file: " + filepath);
+        delete scene;
+        return nullptr;
+    }
+
+    LOG_INFO("Loaded scene with " + std::to_string(scene->gameObjectCount) + " game objects");
+
+    return scene;
+}
+
+void SceneLoader::loadTransformComponent(GameObject* gameObject, const ComponentData& comp) {
+    auto transform = std::make_unique<Transform>();
+    transform->setPosition(comp.transform.position);
+    transform->setRotation(comp.transform.rotation);
+    transform->setScale(comp.transform.scale);
+    gameObject->setTransform(std::move(transform));
+}
+
+void SceneLoader::loadMeshRendererComponent(GameObject* gameObject, const ComponentData& comp) {
+    auto& meshData = comp.meshRenderer.mesh;
+    auto& materialData = comp.meshRenderer.material;
+
+    auto mesh = loadObjMesh(meshData.path, meshData.shadeSmooth);
+    if (!mesh) {
+        LOG_ERROR("Failed to load mesh: " + std::string(meshData.path));
+        return;
+    }
+    mesh->setMeshBuffer(rendererBackend->createMeshBuffer());
+    mesh->configure();
+
+    auto shaderExt = rendererBackend->getShaderExtension();
+    auto vertexShader = std::make_unique<ShaderAsset>(materialData.vertexShaderPath + shaderExt,
+                                                      ShaderType::VERTEX);
+    vertexShader->setShaderCompiler(rendererBackend->createShaderCompiler());
+
+    auto fragmentShader = std::make_unique<ShaderAsset>(materialData.fragmentShaderPath + shaderExt,
+                                                        ShaderType::FRAGMENT);
+    fragmentShader->setShaderCompiler(rendererBackend->createShaderCompiler());
+
+    auto material = std::make_unique<Material>();
+    material->setShaderProgram(rendererBackend->createShaderProgram());
+    material->setVertexShader(std::move(vertexShader));
+    material->setFragmentShader(std::move(fragmentShader));
+    material->setBaseColor(materialData.color);
+
+    if (!material->init()) {
+        LOG_ERROR("Material init failed for mesh: " + std::string(meshData.path));
+        return;
+    }
+
+    auto meshRenderer = std::make_unique<MeshRenderer>();
+    meshRenderer->setMaterial(std::move(material));
+
+    gameObject->setMesh(std::move(mesh));
+    gameObject->setMeshRenderer(std::move(meshRenderer));
+}
+
+void SceneLoader::loadSpriteRendererComponent(GameObject* gameObject, const ComponentData& comp) {
+    auto& textureData = comp.spriteRenderer.texture;
+    auto& materialData = comp.spriteRenderer.material;
+
+    float width = textureData.width * textureData.scaleFactor;
+    float height = textureData.height * textureData.scaleFactor;
+    auto sprite = std::make_unique<Sprite>(width, height);
+
+    unsigned int texID = rendererBackend->loadTexture(textureData.path, textureData.filterType);
+    sprite->setTexture(texID);
+
+    auto shaderExt = rendererBackend->getShaderExtension();
+    auto vertexShader = std::make_unique<ShaderAsset>(materialData.vertexShaderPath + shaderExt,
+                                                      ShaderType::VERTEX);
+    vertexShader->setShaderCompiler(rendererBackend->createShaderCompiler());
+
+    auto fragmentShader = std::make_unique<ShaderAsset>(materialData.fragmentShaderPath + shaderExt,
+                                                        ShaderType::FRAGMENT);
+    fragmentShader->setShaderCompiler(rendererBackend->createShaderCompiler());
+
+    auto material = std::make_unique<Material>();
+    material->setShaderProgram(rendererBackend->createShaderProgram());
+    material->setVertexShader(std::move(vertexShader));
+    material->setFragmentShader(std::move(fragmentShader));
+    material->setBaseColor(materialData.color);
+
+    if (!material->init()) {
+        LOG_ERROR("Material init failed for sprite: " + std::string(textureData.path));
+        return;
+    }
+
+    auto spriteRenderer = std::make_unique<SpriteRenderer>();
+    spriteRenderer->setMaterial(std::move(material));
+
+    gameObject->setSprite(std::move(sprite));
+    gameObject->setSpriteRenderer(std::move(spriteRenderer));
+}
 
 std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, bool shadeSmooth) {
     tinyobj::attrib_t attrib;
@@ -103,23 +204,20 @@ std::unique_ptr<Mesh> SceneLoader::loadObjMesh(const std::string& filepath, bool
     return mesh;
 }
 
-Camera* SceneLoader::loadCamera(const std::string& filepath) {
-    if (!validateSceneFile(filepath))
-        return nullptr;
-
-    std::ifstream file(filepath, std::ios::binary);
-    CompiledScene scene;
-    file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
+Camera* SceneLoader::loadCamera(const CompiledScene* scene) {
 
     auto camera = new Camera();
-    auto& cam = scene.camera;
+    auto& cam = scene->camera;
 
     camera->setBackgroundColor({cam.background_color[0], cam.background_color[1],
                                 cam.background_color[2], cam.background_color[3]});
     camera->setFov(cam.fov);
     camera->setViewRect(cam.view_rect[0], cam.view_rect[1]);
     camera->setPosition({(float)cam.position[0], (float)cam.position[1], (float)cam.position[2]});
+    
     camera->setOrthographic(cam.orthographic);
+    camera->setOrthoSize(cam.orthoSize);
+    LOG_INFO("Camera orthoSize loaded: " + std::to_string(cam.orthoSize));
 
     if (cam.hasSkybox) {
         auto skybox = std::make_unique<Skybox>();
@@ -154,98 +252,26 @@ Camera* SceneLoader::loadCamera(const std::string& filepath) {
     return camera;
 }
 
-std::vector<GameObject*>* SceneLoader::loadGameObjects(const std::string& filepath) {
-    if (!validateSceneFile(filepath))
-        return nullptr;
-
-    std::ifstream file(filepath, std::ios::binary);
-    CompiledScene scene;
-    file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
+std::vector<GameObject*>* SceneLoader::loadGameObjects(const CompiledScene* scene) {
 
     auto objects = new std::vector<GameObject*>();
 
-    for (uint32_t i = 0; i < scene.gameObjectCount; i++) {
-        auto& goData = scene.gameObjects[i];
+    LOG_INFO("Loading " + std::to_string(scene->gameObjectCount) + " game objects");
+
+    for (uint32_t i = 0; i < scene->gameObjectCount; i++) {
+        auto& goData = scene->gameObjects[i];
         auto gameObject = new GameObject();
 
         for (uint8_t j = 0; j < goData.componentCount; j++) {
             auto& comp = goData.components[j];
 
             if (comp.type == ComponentType::MESH_RENDERER) {
-                auto& meshData = comp.meshRenderer.mesh;
-                auto& materialData = comp.meshRenderer.material;
-
-                auto mesh = loadObjMesh(meshData.path, meshData.shadeSmooth);
-                if (!mesh) {
-                    LOG_ERROR("Failed to load mesh: " + std::string(meshData.path));
-                    continue;
-                }
-                mesh->setMeshBuffer(rendererBackend->createMeshBuffer());
-                mesh->configure();
-
-                auto shaderExt = rendererBackend->getShaderExtension();
-                auto vertexShader = std::make_unique<ShaderAsset>(
-                    materialData.vertexShaderPath + shaderExt, ShaderType::VERTEX);
-                vertexShader->setShaderCompiler(rendererBackend->createShaderCompiler());
-
-                auto fragmentShader = std::make_unique<ShaderAsset>(
-                    materialData.fragmentShaderPath + shaderExt, ShaderType::FRAGMENT);
-                fragmentShader->setShaderCompiler(rendererBackend->createShaderCompiler());
-
-                auto material = std::make_unique<Material>();
-                material->setShaderProgram(rendererBackend->createShaderProgram());
-                material->setVertexShader(std::move(vertexShader));
-                material->setFragmentShader(std::move(fragmentShader));
-                material->setBaseColor(materialData.color);
-
-                if (!material->init()) {
-                    LOG_ERROR("Material init failed for mesh: " + std::string(meshData.path));
-                    continue;
-                }
-
-                auto meshRenderer = std::make_unique<MeshRenderer>();
-                meshRenderer->setMaterial(std::move(material));
-
-                gameObject->setMesh(std::move(mesh));
-                gameObject->setMeshRenderer(std::move(meshRenderer));
+                LOG_INFO("Loading mesh renderer component");
+                loadMeshRendererComponent(gameObject, comp);
+            } else if (comp.type == ComponentType::TRANSFORM) {
+                loadTransformComponent(gameObject, comp);
             } else if (comp.type == ComponentType::SPRITE_RENDERER) {
-                auto& textureData = comp.spriteRenderer.texture;
-                auto& materialData = comp.spriteRenderer.material;
-
-                float width = textureData.width * textureData.scaleFactor;
-                float height = textureData.height * textureData.scaleFactor;
-                auto sprite = std::make_unique<Sprite>(width, height);
-
-                unsigned int texID =
-                    rendererBackend->loadTexture(textureData.path, textureData.filterType);
-                sprite->setTexture(texID);
-
-
-                auto shaderExt = rendererBackend->getShaderExtension();
-                auto vertexShader = std::make_unique<ShaderAsset>(
-                    materialData.vertexShaderPath + shaderExt, ShaderType::VERTEX);
-                vertexShader->setShaderCompiler(rendererBackend->createShaderCompiler());
-
-                auto fragmentShader = std::make_unique<ShaderAsset>(
-                    materialData.fragmentShaderPath + shaderExt, ShaderType::FRAGMENT);
-                fragmentShader->setShaderCompiler(rendererBackend->createShaderCompiler());
-
-                auto material = std::make_unique<Material>();
-                material->setShaderProgram(rendererBackend->createShaderProgram());
-                material->setVertexShader(std::move(vertexShader));
-                material->setFragmentShader(std::move(fragmentShader));
-                material->setBaseColor(materialData.color);
-
-                if (!material->init()) {
-                    LOG_ERROR("Material init failed for sprite: " + std::string(textureData.path));
-                    continue;
-                }
-
-                auto spriteRenderer = std::make_unique<SpriteRenderer>();
-                spriteRenderer->setMaterial(std::move(material));
-
-                gameObject->setSprite(std::move(sprite));
-                gameObject->setSpriteRenderer(std::move(spriteRenderer));
+                loadSpriteRendererComponent(gameObject, comp);
             }
         }
 
@@ -255,19 +281,14 @@ std::vector<GameObject*>* SceneLoader::loadGameObjects(const std::string& filepa
     return objects;
 }
 
-std::vector<Light>* SceneLoader::loadLights(const std::string& filepath) {
-    if (!validateSceneFile(filepath))
-        return nullptr;
-
-    std::ifstream file(filepath, std::ios::binary);
-    CompiledScene scene;
-    file.read(reinterpret_cast<char*>(&scene), sizeof(CompiledScene));
+std::vector<Light>* SceneLoader::loadLights(const CompiledScene* scene) {
 
     auto lights = new std::vector<Light>();
-    for (uint32_t i = 0; i < scene.lightCount; i++) {
+
+    for (uint32_t i = 0; i < scene->lightCount; i++) {
         Light light;
-        light.type = static_cast<LightType>(scene.lights[i].type);
-        light.direction = scene.lights[i].direction;
+        light.type = static_cast<LightType>(scene->lights[i].type);
+        light.direction = scene->lights[i].direction;
         lights->push_back(light);
     }
 

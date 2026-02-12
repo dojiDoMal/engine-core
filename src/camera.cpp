@@ -38,6 +38,10 @@ void Camera::setOrthographic(bool ortho) { this->orthographic = ortho; }
 
 bool Camera::isOrthographic() const { return orthographic; }
 
+void Camera::setOrthoSize(float size) { this->orthoSize = size; }
+
+float Camera::getOrthoSize() const { return orthoSize; }
+
 void Camera::setViewRect(float width, float height) {
     setWidth(width);
     setHeight(height);

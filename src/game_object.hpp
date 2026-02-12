@@ -5,6 +5,7 @@
 #include "mesh_renderer.hpp"
 #include "sprite.hpp"
 #include "sprite_renderer.hpp"
+#include "transform.hpp"
 #include <memory>
 
 class GameObject {
@@ -14,28 +15,33 @@ class GameObject {
     std::unique_ptr<Sprite> sprite;
     std::unique_ptr<SpriteRenderer> spriteRenderer;
 
+    std::unique_ptr<Transform> transform;
+
   public:
     GameObject() = default;
 
-    void setMesh(std::unique_ptr<Mesh> m) { mesh = std::move(m); }
-    Mesh* getMesh() { return mesh.get(); }
-    const Mesh* getMesh() const { return mesh.get(); }
-    bool hasMesh() const { return mesh != nullptr; }
+    void setTransform(std::unique_ptr<Transform> t);
+    Transform* getTransform();
 
-    void setMeshRenderer(std::unique_ptr<MeshRenderer> m) { meshRenderer = std::move(m); }
-    MeshRenderer* getMeshRenderer() { return meshRenderer.get(); }
-    const MeshRenderer* getMeshRenderer() const { return meshRenderer.get(); }
-    bool hasMeshRenderer() const { return meshRenderer != nullptr; }
+    void setMesh(std::unique_ptr<Mesh> m);
+    Mesh* getMesh();
+    const Mesh* getMesh() const;
+    bool hasMesh() const;
 
-    void setSprite(std::unique_ptr<Sprite> s) { sprite = std::move(s); }
-    Sprite* getSprite() { return sprite.get(); }
-    const Sprite* getSprite() const { return sprite.get(); }
-    bool hasSprite() const { return sprite != nullptr; }
+    void setMeshRenderer(std::unique_ptr<MeshRenderer> m);
+    MeshRenderer* getMeshRenderer();
+    const MeshRenderer* getMeshRenderer() const;
+    bool hasMeshRenderer() const;
 
-    void setSpriteRenderer(std::unique_ptr<SpriteRenderer> sr) { spriteRenderer = std::move(sr); }
-    SpriteRenderer* getSpriteRenderer() { return spriteRenderer.get(); }
-    const SpriteRenderer* getSpriteRenderer() const { return spriteRenderer.get(); }
-    bool hasSpriteRenderer() const { return spriteRenderer != nullptr; }
+    void setSprite(std::unique_ptr<Sprite> s);
+    Sprite* getSprite();
+    const Sprite* getSprite() const;
+    bool hasSprite() const;
+
+    void setSpriteRenderer(std::unique_ptr<SpriteRenderer> sr);
+    SpriteRenderer* getSpriteRenderer();
+    const SpriteRenderer* getSpriteRenderer() const;
+    bool hasSpriteRenderer() const;
 };
 
 #endif

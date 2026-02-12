@@ -16,6 +16,7 @@ class Camera {
     float width = 800.0f;
     float height = 600.0f;
     bool orthographic = false;
+    float orthoSize = 1.0f;
 
   public:
     Camera() = default;
@@ -36,6 +37,8 @@ class Camera {
     void setHeight(float height);
     float getHeight() const;
     float getAspectRatio() const;
+    void setOrthoSize(float size);
+    float getOrthoSize() const;
     
     void setSkybox(std::unique_ptr<Skybox> skybox);
     Skybox* getSkybox() const;

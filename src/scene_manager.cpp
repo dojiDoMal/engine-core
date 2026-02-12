@@ -31,9 +31,15 @@ void SceneManager::loadScene(const std::string& name) {
 
     activeSceneName = name;
     activeScene = new Scene();
-    activeScene->setCamera(sceneLoader.loadCamera(it->second));
-    activeScene->setLights(sceneLoader.loadLights(it->second));
-    activeScene->setGameObjects(sceneLoader.loadGameObjects(it->second));
+    
+    auto compiledScene = sceneLoader.loadCompiledScene(it->second);
+    if (!compiledScene) return;
+    
+    activeScene->setCamera(sceneLoader.loadCamera(compiledScene));
+    activeScene->setLights(sceneLoader.loadLights(compiledScene));
+    activeScene->setGameObjects(sceneLoader.loadGameObjects(compiledScene));
+
+    delete compiledScene;
 }
 
 void SceneManager::setRendererBackend(RendererBackend& rendererBackend) {

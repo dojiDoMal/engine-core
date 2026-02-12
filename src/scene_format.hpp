@@ -41,6 +41,7 @@ struct SceneCameraData {
     float view_rect[2];
     double position[3];
     bool orthographic;
+    float orthoSize;
     bool hasSkybox;
     SkyboxData skybox;
 };
@@ -48,12 +49,19 @@ struct SceneCameraData {
 enum class ComponentType : uint8_t {
     MESH_RENDERER = 0,
     SPRITE_RENDERER = 1,
+    TRANSFORM = 2,
     // Futuros: AUDIO_SOURCE, COLLIDER, RIGIDBODY, etc.
 };
 
 struct ComponentData {
     ComponentType type;
     union {
+        struct {
+            Vector3 position;
+            Vector3 rotation;
+            Vector3 scale;
+        } transform;
+        
         struct {
             MeshData mesh;
             MaterialData material;
