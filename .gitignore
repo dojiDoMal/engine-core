@@ -3,3 +3,4 @@ logs/
 *.log
 *.glsl
 *.spv
+*.scnb
