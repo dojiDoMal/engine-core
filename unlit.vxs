@@ -1,0 +1,26 @@
+cbuffer Matrices : register(b0) {
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+};
+
+struct VSInput {
+    float3 position : POSITION;
+    float3 normal : NORMAL;
+};
+
+struct VSOutput {
+    float4 position : SV_Position;
+};
+
+VSOutput main(VSInput input) {
+    VSOutput output;
+    
+    float4 pos = float4(input.position, 1.0);
+    pos = mul(model, pos);
+    pos = mul(view, pos);
+    pos = mul(projection, pos);
+    
+    output.position = pos;
+    return output;
+}

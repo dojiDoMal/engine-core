@@ -1,0 +1,13 @@
+TextureCube skybox : register(t0);
+SamplerState samplerState : register(s0);
+
+struct PS_INPUT
+{
+    float4 position : SV_POSITION;
+    float3 texCoords : TEXCOORD0;
+};
+
+float4 main(PS_INPUT input) : SV_TARGET
+{
+    return skybox.Sample(samplerState, input.texCoords);
+}

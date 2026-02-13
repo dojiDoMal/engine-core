@@ -1,0 +1,39 @@
+{
+  "camera": {
+    "background_color": [0.7, 0.5, 0.5, 1.0],
+    "fov": 60.0,
+    "view_rect": [800.0, 600.0],
+    "position": [3.0, -2.0, 3.0],
+    "__skybox": {
+      "material": {
+        "vertexShaderPath": "skybox.vxs",
+        "fragmentShaderPath": "skybox.pxs"  
+      },      
+      "cubeMapTextures": [
+        "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"
+      ]
+    }
+  },
+  "lights": [
+    {
+      "type": "DIRECTIONAL",
+      "direction": [0.5, 0.0, -1.0]
+    }
+  ],
+  "gameObjects": [
+    {
+      "components": [
+        {
+          "type": "MESH_RENDERER",
+          "shadeSmooth": true,
+          "objPath": "cubo.obj",
+          "material": {
+            "vertexShaderPath": "flat.vxs",
+            "fragmentShaderPath": "flat.pxs",
+            "color": [1.0, 0.0, 0.0, 1.0]
+          } 
+        }
+      ]
+    }
+  ]
+}

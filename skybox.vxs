@@ -1,0 +1,25 @@
+cbuffer Matrices : register(b0)
+{
+    float4x4 projection;
+    float4x4 view;
+};
+
+struct VS_INPUT
+{
+    float3 aPos : POSITION;
+};
+
+struct VS_OUTPUT
+{
+    float4 position : SV_POSITION;
+    float3 texCoords : TEXCOORD0;
+};
+
+VS_OUTPUT main(VS_INPUT input)
+{
+    VS_OUTPUT output;
+    output.texCoords = input.aPos;
+    float4 pos = mul(mul(float4(input.aPos, 1.0), view), projection);
+    output.position = pos.xyww;
+    return output;
+}
